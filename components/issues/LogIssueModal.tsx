@@ -212,12 +212,12 @@ export function LogIssueModal({ open, onClose, defaultMachineId, reportedBy, onS
           {/* Assign to */}
           <div className="space-y-2">
             <Label>Assign To</Label>
-            <Select value={assignedTo} onValueChange={setAssignedTo}>
+            <Select value={assignedTo || '__none__'} onValueChange={v => setAssignedTo(v === '__none__' ? '' : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select operator (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="__none__">Unassigned</SelectItem>
                 {operators.map(op => (
                   <SelectItem key={op.id} value={op.id}>
                     <span className="font-mono">{op.id}</span> — {op.name}
