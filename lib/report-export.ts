@@ -1,7 +1,26 @@
 // PDF and CSV export utilities for APF Maintenance Tracker
 import type { ReportData } from '@/components/reports/ReportsView'
 
-const LOGO_URL = 'https://img1.wsimg.com/isteam/ip/c1812088-d5b4-4d7c-b39c-afa691bded3c/White%404x.png'
+/** Loads an image URL into a base64 data URL via HTMLImageElement + Canvas.
+ *  Works reliably for same-origin assets with no CORS complications. */
+function loadImageAsDataURL(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('No canvas context')); return }
+      ctx.drawImage(img, 0, 0)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
+    img.src = src
+  })
+}
+
+const LOGO_URL = '/logo-white.png'  // served from same origin — no CORS
 const BRAND_GREEN = '#0d7a3e'
 const HEADER_BG: [number, number, number] = [13, 51, 32]   // #0d3320
 const ACCENT: [number, number, number] = [13, 122, 62]     // #0d7a3e
@@ -91,20 +110,14 @@ export async function exportPDF(data: ReportData, from: Date, to: Date) {
   doc.setFillColor(...ACCENT)
   doc.rect(0, 28, pageW, 1.2, 'F')
 
-  // Try to load logo
+  // Load logo via Image + Canvas (same-origin, no CORS issues)
   try {
-    const res = await fetch(LOGO_URL)
-    const blob = await res.blob()
-    const dataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsDataURL(blob)
-    })
+    const dataUrl = await loadImageAsDataURL(LOGO_URL)
     doc.addImage(dataUrl, 'PNG', margin, 5, 40, 16)
   } catch {
-    // Logo failed — write text fallback
+    // Text fallback if image fails
     doc.setTextColor(255, 255, 255)
-    doc.setFontSize(13)
+    doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.text('Al Arabi Plastic Factory', margin, 17)
   }
