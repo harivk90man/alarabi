@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 9% 98%;
+    --foreground: 60 5% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 60 5% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 60 5% 10%;
+    --primary: 148 74% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 5% 96%;
+    --secondary-foreground: 60 5% 10%;
+    --muted: 60 5% 96%;
+    --muted-foreground: 60 5% 45%;
+    --accent: 142 69% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 5% 90%;
+    --input: 60 5% 90%;
+    --ring: 148 74% 26%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-[#fafaf8] text-[#1a1a18] font-sans;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .status-dot {
+    @apply inline-block w-2.5 h-2.5 rounded-full;
+  }
+
+  .status-dot-running {
+    @apply bg-[#16a34a];
+  }
+
+  .status-dot-down {
+    @apply bg-[#dc2626] animate-pulse;
+  }
+
+  .status-dot-maintenance {
+    @apply bg-[#b45309];
+  }
+
+  .status-dot-minor {
+    @apply bg-[#1d4ed8];
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #16a34a #f0f0f0;
+  }
+}
