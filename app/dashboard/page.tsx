@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { AppShell } from '@/components/layout/AppShell'
 import { KpiCards } from '@/components/dashboard/KpiCards'
 import { CategoryHealth } from '@/components/dashboard/CategoryHealth'
