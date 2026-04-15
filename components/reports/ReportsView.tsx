@@ -1,249 +1,420 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell
+  ResponsiveContainer, Cell,
 } from 'recharts'
 import { formatDuration } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { FileText, Download, Loader2, CalendarRange } from 'lucide-react'
+import { exportCSV, exportPDF } from '@/lib/report-export'
 
-type Period = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function getPeriodStart(period: Period): Date {
-  const now = new Date()
-  switch (period) {
-    case 'daily': return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    case 'weekly': {
-      const d = new Date(now)
-      d.setDate(d.getDate() - 7)
-      return d
-    }
-    case 'monthly': return new Date(now.getFullYear(), now.getMonth(), 1)
-    case 'quarterly': return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
-    case 'yearly': return new Date(now.getFullYear(), 0, 1)
-  }
-}
-
-interface DowntimeMachine {
+export interface ReportIssue {
+  id: string
+  issue_number: string
   machine_id: string
-  total_minutes: number
+  type: string
+  status: string
+  description: string
+  start_time: string
+  end_time: string | null
+  duration_minutes: number | null
+  downtime: boolean
+  reported_by: string | null
+  assigned_to: string | null
+  reporter_name: string | null
+  assignee_name: string | null
 }
 
-interface OperatorStat {
-  name: string
-  resolved: number
-  avg_minutes: number
+export interface ReportData {
+  summary: { total: number; breakdowns: number; minor: number; preventive: number }
+  totalDowntimeMin: number
+  issues: ReportIssue[]
+  downtimeMachines: { machine_id: string; total_minutes: number }[]
+  operatorStats: { name: string; resolved: number; avg_minutes: number }[]
 }
 
-interface Summary {
-  total: number
-  breakdowns: number
-  minor: number
-  preventive: number
+// ─── Period helpers ───────────────────────────────────────────────────────────
+
+type Period = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom'
+
+function periodRange(period: Period): { from: Date; to: Date } {
+  const now = new Date()
+  const to = new Date(now)
+  let from: Date
+
+  switch (period) {
+    case 'today':
+      from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      break
+    case 'week':
+      from = new Date(now); from.setDate(from.getDate() - 7)
+      break
+    case 'month':
+      from = new Date(now.getFullYear(), now.getMonth(), 1)
+      break
+    case 'quarter':
+      from = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+      break
+    case 'year':
+      from = new Date(now.getFullYear(), 0, 1)
+      break
+    default:
+      from = new Date(now.getFullYear(), now.getMonth(), 1)
+  }
+  return { from, to }
 }
+
+function toInputDate(d: Date) {
+  return d.toISOString().slice(0, 10)
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ReportsView() {
-  const [period, setPeriod] = useState<Period>('monthly')
-  const [summary, setSummary] = useState<Summary>({ total: 0, breakdowns: 0, minor: 0, preventive: 0 })
-  const [downtimeData, setDowntimeData] = useState<DowntimeMachine[]>([])
-  const [operatorStats, setOperatorStats] = useState<OperatorStat[]>([])
+  const [period, setPeriod] = useState<Period>('month')
+  const [customFrom, setCustomFrom] = useState(toInputDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
+  const [customTo, setCustomTo] = useState(toInputDate(new Date()))
+  const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
 
-  useEffect(() => {
-    async function fetchReports() {
-      setLoading(true)
-      const startDate = getPeriodStart(period).toISOString()
+  // Derived date range
+  const { from, to } = period === 'custom'
+    ? { from: new Date(customFrom), to: new Date(customTo + 'T23:59:59') }
+    : periodRange(period)
 
-      const { data: issues } = await supabase
-        .from('issues')
-        .select('id, type, status, machine_id, duration_minutes, assigned_to, operators!issues_assigned_to_fkey(name)')
-        .gte('start_time', startDate)
+  const fetchReports = useCallback(async () => {
+    setLoading(true)
 
-      if (!issues) { setLoading(false); return }
+    const { data: issues } = await supabase
+      .from('issues')
+      .select(`
+        id, issue_number, machine_id, type, status, description,
+        start_time, end_time, duration_minutes, downtime,
+        reported_by, assigned_to,
+        reporter:operators!issues_reported_by_fkey(name),
+        assignee:operators!issues_assigned_to_fkey(name)
+      `)
+      .gte('start_time', from.toISOString())
+      .lte('start_time', to.toISOString())
+      .order('start_time', { ascending: false })
 
-      // Summary
-      setSummary({
-        total: issues.length,
-        breakdowns: issues.filter(i => i.type === 'breakdown').length,
-        minor: issues.filter(i => i.type === 'minor').length,
-        preventive: issues.filter(i => i.type === 'preventive').length,
-      })
+    if (!issues) { setLoading(false); return }
 
-      // Downtime by machine (breakdowns only)
-      const downtimeMap: Record<string, number> = {}
-      for (const issue of issues.filter(i => i.type === 'breakdown' && i.status === 'resolved')) {
-        downtimeMap[issue.machine_id] = (downtimeMap[issue.machine_id] ?? 0) + (issue.duration_minutes ?? 0)
-      }
-      const dtData = Object.entries(downtimeMap)
-        .map(([machine_id, total_minutes]) => ({ machine_id, total_minutes }))
-        .sort((a, b) => b.total_minutes - a.total_minutes)
-        .slice(0, 10)
-      setDowntimeData(dtData)
+    // Flatten operator names
+    const flatIssues: ReportIssue[] = issues.map((i: any) => ({
+      ...i,
+      reporter_name: Array.isArray(i.reporter) ? i.reporter[0]?.name : i.reporter?.name ?? null,
+      assignee_name: Array.isArray(i.assignee) ? i.assignee[0]?.name : i.assignee?.name ?? null,
+    }))
 
-      // Operator performance
-      const opMap: Record<string, { name: string; resolved: number; totalMinutes: number }> = {}
-      for (const issue of issues.filter(i => i.status === 'resolved' && i.assigned_to)) {
-        const opRaw = issue.operators as unknown
-        const name = (Array.isArray(opRaw) ? opRaw[0]?.name : (opRaw as { name: string } | null)?.name) ?? issue.assigned_to ?? 'Unknown'
-        const id = issue.assigned_to!
-        if (!opMap[id]) opMap[id] = { name, resolved: 0, totalMinutes: 0 }
-        opMap[id].resolved++
-        opMap[id].totalMinutes += issue.duration_minutes ?? 0
-      }
-      const opStats = Object.values(opMap)
-        .map(v => ({ name: v.name, resolved: v.resolved, avg_minutes: v.resolved > 0 ? Math.round(v.totalMinutes / v.resolved) : 0 }))
-        .sort((a, b) => b.resolved - a.resolved)
-        .slice(0, 10)
-      setOperatorStats(opStats)
-
-      setLoading(false)
+    // Summary
+    const summary = {
+      total: flatIssues.length,
+      breakdowns: flatIssues.filter(i => i.type === 'breakdown').length,
+      minor: flatIssues.filter(i => i.type === 'minor').length,
+      preventive: flatIssues.filter(i => i.type === 'preventive').length,
     }
-    fetchReports()
-  }, [period])
 
-  const PERIODS: Period[] = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly']
+    // Downtime by machine
+    const dtMap: Record<string, number> = {}
+    for (const i of flatIssues.filter(i => i.type === 'breakdown' && i.status === 'resolved')) {
+      dtMap[i.machine_id] = (dtMap[i.machine_id] ?? 0) + (i.duration_minutes ?? 0)
+    }
+    const downtimeMachines = Object.entries(dtMap)
+      .map(([machine_id, total_minutes]) => ({ machine_id, total_minutes }))
+      .sort((a, b) => b.total_minutes - a.total_minutes)
+      .slice(0, 10)
 
-  const total = summary.total || 1
-  const breakdown_pct = Math.round((summary.breakdowns / total) * 100)
-  const minor_pct = Math.round((summary.minor / total) * 100)
-  const preventive_pct = Math.round((summary.preventive / total) * 100)
+    const totalDowntimeMin = Object.values(dtMap).reduce((s, v) => s + v, 0)
+
+    // Operator stats
+    const opMap: Record<string, { name: string; resolved: number; totalMin: number }> = {}
+    for (const i of flatIssues.filter(i => i.status === 'resolved' && i.assigned_to)) {
+      const id = i.assigned_to!
+      const name = i.assignee_name ?? id
+      if (!opMap[id]) opMap[id] = { name, resolved: 0, totalMin: 0 }
+      opMap[id].resolved++
+      opMap[id].totalMin += i.duration_minutes ?? 0
+    }
+    const operatorStats = Object.values(opMap)
+      .map(v => ({ name: v.name, resolved: v.resolved, avg_minutes: v.resolved > 0 ? Math.round(v.totalMin / v.resolved) : 0 }))
+      .sort((a, b) => b.resolved - a.resolved)
+      .slice(0, 10)
+
+    setData({ summary, totalDowntimeMin, issues: flatIssues, downtimeMachines, operatorStats })
+    setLoading(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [from.toISOString(), to.toISOString()])
+
+  useEffect(() => { fetchReports() }, [fetchReports])
+
+  const handleExportCSV = () => {
+    if (!data) return
+    exportCSV(data, from, to)
+  }
+
+  const handleExportPDF = async () => {
+    if (!data) return
+    setExporting('pdf')
+    try {
+      await exportPDF(data, from, to)
+    } finally {
+      setExporting(null)
+    }
+  }
+
+  const PERIODS: { key: Period; label: string }[] = [
+    { key: 'today', label: 'Today' },
+    { key: 'week', label: 'Last 7 Days' },
+    { key: 'month', label: 'This Month' },
+    { key: 'quarter', label: 'This Quarter' },
+    { key: 'year', label: 'This Year' },
+    { key: 'custom', label: 'Custom Range' },
+  ]
+
+  const total = data?.summary.total || 1
+  const breakdown_pct = Math.round(((data?.summary.breakdowns ?? 0) / total) * 100)
+  const minor_pct = Math.round(((data?.summary.minor ?? 0) / total) * 100)
+  const preventive_pct = Math.round(((data?.summary.preventive ?? 0) / total) * 100)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-        <p className="text-gray-500 text-sm mt-1">Analytics and performance insights</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Analytics and performance insights
+            {!loading && data && (
+              <span className="ml-2 text-[#0d7a3e] font-medium">
+                · {data.summary.total} issues in period
+              </span>
+            )}
+          </p>
+        </div>
+
+        {/* Export buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={loading || !data || data.summary.total === 0}
+            className="gap-2 border-gray-300"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={loading || !data || data.summary.total === 0 || exporting === 'pdf'}
+            className="gap-2"
+          >
+            {exporting === 'pdf' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileText className="w-3.5 h-3.5" />
+            )}
+            {exporting === 'pdf' ? 'Generating…' : 'Export PDF'}
+          </Button>
+        </div>
       </div>
 
-      {/* Period selector */}
-      <div className="flex gap-2">
-        {PERIODS.map(p => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-              period === p
-                ? 'bg-[#0d7a3e] text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-[#0d7a3e] hover:text-[#0d7a3e]'
-            }`}
-          >
-            {p}
-          </button>
-        ))}
+      {/* Period selector + custom date range */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {PERIODS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setPeriod(key)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
+                period === key
+                  ? 'bg-[#0d7a3e] text-white border-[#0d7a3e]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#0d7a3e] hover:text-[#0d7a3e]'
+              }`}
+            >
+              {key === 'custom' && <CalendarRange className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom date range inputs */}
+        {period === 'custom' && (
+          <div className="flex flex-wrap gap-4 items-end pt-1 border-t border-gray-100">
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-500">From</Label>
+              <Input
+                type="date"
+                value={customFrom}
+                onChange={e => setCustomFrom(e.target.value)}
+                max={customTo}
+                className="w-40 h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-gray-500">To</Label>
+              <Input
+                type="date"
+                value={customTo}
+                onChange={e => setCustomTo(e.target.value)}
+                min={customFrom}
+                max={toInputDate(new Date())}
+                className="w-40 h-8 text-sm"
+              />
+            </div>
+            <div className="text-xs text-gray-400 pb-1.5">
+              {(() => {
+                const days = Math.round((new Date(customTo).getTime() - new Date(customFrom).getTime()) / 86400000)
+                return `${days + 1} day${days !== 0 ? 's' : ''} selected`
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Active range label */}
+        <div className="text-xs text-gray-400 flex items-center gap-1">
+          <CalendarRange className="w-3 h-3" />
+          Showing: <span className="font-medium text-gray-600">
+            {from.toLocaleDateString('en-KW', { day: '2-digit', month: 'short', year: 'numeric' })}
+            {' '}&rarr;{' '}
+            {to.toLocaleDateString('en-KW', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Issues', value: summary.total, color: '#1a1a18' },
-          { label: 'Breakdowns', value: summary.breakdowns, color: '#dc2626' },
-          { label: 'Minor Issues', value: summary.minor, color: '#b45309' },
-          { label: 'Preventive', value: summary.preventive, color: '#1d4ed8' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-lg border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 font-medium">{label}</p>
-            <p className="text-3xl font-bold mt-1" style={{ color }}>{value}</p>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {[
+            { label: 'Total Issues', value: data?.summary.total ?? 0, color: '#1a1a18' },
+            { label: 'Breakdowns', value: data?.summary.breakdowns ?? 0, color: '#dc2626' },
+            { label: 'Minor Issues', value: data?.summary.minor ?? 0, color: '#b45309' },
+            { label: 'Preventive', value: data?.summary.preventive ?? 0, color: '#1d4ed8' },
+            { label: 'Total Downtime', value: formatDuration(data?.totalDowntimeMin ?? 0), color: '#dc2626', isText: true },
+          ].map(({ label, value, color, isText }) => (
+            <div key={label} className="bg-white rounded-lg border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium">{label}</p>
+              <p className={`font-bold mt-1 ${isText ? 'text-xl' : 'text-3xl'}`} style={{ color }}>{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Issue distribution bar */}
-      {summary.total > 0 && (
+      {/* Distribution bar */}
+      {!loading && data && data.summary.total > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Issue Type Distribution</h2>
-          <div className="flex h-8 rounded-lg overflow-hidden gap-0.5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Issue Type Distribution</h2>
+          <div className="flex h-7 rounded-lg overflow-hidden gap-0.5">
             {breakdown_pct > 0 && (
-              <div
-                className="flex items-center justify-center text-white text-xs font-medium"
-                style={{ width: `${breakdown_pct}%`, backgroundColor: '#dc2626' }}
-              >
+              <div className="flex items-center justify-center text-white text-xs font-medium"
+                style={{ width: `${breakdown_pct}%`, backgroundColor: '#dc2626' }}>
                 {breakdown_pct}%
               </div>
             )}
             {minor_pct > 0 && (
-              <div
-                className="flex items-center justify-center text-white text-xs font-medium"
-                style={{ width: `${minor_pct}%`, backgroundColor: '#b45309' }}
-              >
+              <div className="flex items-center justify-center text-white text-xs font-medium"
+                style={{ width: `${minor_pct}%`, backgroundColor: '#b45309' }}>
                 {minor_pct}%
               </div>
             )}
             {preventive_pct > 0 && (
-              <div
-                className="flex items-center justify-center text-white text-xs font-medium"
-                style={{ width: `${preventive_pct}%`, backgroundColor: '#1d4ed8' }}
-              >
+              <div className="flex items-center justify-center text-white text-xs font-medium"
+                style={{ width: `${preventive_pct}%`, backgroundColor: '#1d4ed8' }}>
                 {preventive_pct}%
               </div>
             )}
           </div>
-          <div className="flex gap-4 mt-2 text-xs">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#dc2626]" />Breakdown ({summary.breakdowns})</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#b45309]" />Minor ({summary.minor})</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#1d4ed8]" />Preventive ({summary.preventive})</span>
+          <div className="flex gap-5 mt-2 text-xs text-gray-500">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#dc2626]" />Breakdown ({data.summary.breakdowns})</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#b45309]" />Minor ({data.summary.minor})</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#1d4ed8]" />Preventive ({data.summary.preventive})</span>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Downtime Machines */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Top Downtime Machines</h2>
-          {loading ? (
-            <div className="h-48 bg-gray-50 rounded animate-pulse" />
-          ) : downtimeData.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No breakdown data for this period</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={downtimeData} layout="vertical" margin={{ left: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" tickFormatter={v => formatDuration(v)} tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="machine_id" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} width={48} />
-                <Tooltip formatter={(v: number) => [formatDuration(v), 'Downtime']} />
-                <Bar dataKey="total_minutes" radius={[0, 4, 4, 0]}>
-                  {downtimeData.map((_, i) => (
-                    <Cell key={i} fill={i === 0 ? '#dc2626' : i === 1 ? '#b45309' : '#0d7a3e'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+      {!loading && data && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Downtime chart */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Downtime Machines</h2>
+            {data.downtimeMachines.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No breakdown data for this period</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={data.downtimeMachines} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" tickFormatter={v => formatDuration(v)} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="machine_id" tick={{ fontSize: 11, fontFamily: 'IBM Plex Mono' }} width={44} />
+                  <Tooltip formatter={(v: number) => [formatDuration(v), 'Downtime']} />
+                  <Bar dataKey="total_minutes" radius={[0, 4, 4, 0]}>
+                    {data.downtimeMachines.map((_, i) => (
+                      <Cell key={i} fill={i === 0 ? '#dc2626' : i === 1 ? '#b45309' : '#0d7a3e'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
 
-        {/* Operator Performance */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Operator Performance</h2>
-          {operatorStats.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No resolved issues for this period</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
-                  <th className="text-left pb-2">Name</th>
-                  <th className="text-right pb-2">Resolved</th>
-                  <th className="text-right pb-2">Avg Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {operatorStats.map(op => (
-                  <tr key={op.name}>
-                    <td className="py-2 font-medium text-gray-800">{op.name}</td>
-                    <td className="py-2 text-right">
-                      <span className="inline-block bg-green-100 text-green-700 font-mono text-xs px-2 py-0.5 rounded-full">
-                        {op.resolved}
-                      </span>
-                    </td>
-                    <td className="py-2 text-right text-gray-500 font-mono text-xs">
-                      {op.avg_minutes > 0 ? formatDuration(op.avg_minutes) : '—'}
-                    </td>
+          {/* Operator performance */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Operator Performance</h2>
+            {data.operatorStats.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No resolved issues for this period</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                    <th className="text-left pb-2">Name</th>
+                    <th className="text-right pb-2">Resolved</th>
+                    <th className="text-right pb-2">Avg Time</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {data.operatorStats.map(op => (
+                    <tr key={op.name}>
+                      <td className="py-2 font-medium text-gray-800">{op.name}</td>
+                      <td className="py-2 text-right">
+                        <span className="inline-block bg-green-100 text-green-700 font-mono text-xs px-2 py-0.5 rounded-full">
+                          {op.resolved}
+                        </span>
+                      </td>
+                      <td className="py-2 text-right text-gray-500 font-mono text-xs">
+                        {op.avg_minutes > 0 ? formatDuration(op.avg_minutes) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* No data state */}
+      {!loading && data && data.summary.total === 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 py-16 text-center text-gray-400">
+          <FileText className="w-10 h-10 mx-auto mb-3" />
+          <p className="font-medium">No issues in this period</p>
+          <p className="text-sm mt-1">Try a wider date range</p>
+        </div>
+      )}
     </div>
   )
 }

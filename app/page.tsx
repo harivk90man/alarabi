@@ -86,7 +86,7 @@ export default function LoginPage() {
                   <Input
                     id="badge"
                     type="text"
-                    placeholder="e.g. 203"
+                    placeholder="Enter badge ID"
                     value={badgeId}
                     onChange={(e) => setBadgeId(e.target.value)}
                     className="text-center text-lg font-mono tracking-widest h-12 border-gray-300"
