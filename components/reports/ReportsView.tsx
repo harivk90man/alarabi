@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -85,76 +85,94 @@ export function ReportsView() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
 
-  // Derived date range
-  const { from, to } = period === 'custom'
-    ? { from: new Date(customFrom), to: new Date(customTo + 'T23:59:59') }
-    : periodRange(period)
+  // Stable ISO strings — only recompute when period/custom inputs change
+  const { fromISO, toISO } = useMemo(() => {
+    if (period === 'custom') {
+      return {
+        fromISO: new Date(customFrom).toISOString(),
+        toISO: new Date(customTo + 'T23:59:59').toISOString(),
+      }
+    }
+    const { from, to } = periodRange(period)
+    // Snap "to" to end-of-day so it doesn't drift on every render
+    to.setHours(23, 59, 59, 999)
+    return { fromISO: from.toISOString(), toISO: to.toISOString() }
+  }, [period, customFrom, customTo])
 
-  const fetchReports = useCallback(async () => {
-    setLoading(true)
+  const from = new Date(fromISO)
+  const to = new Date(toISO)
 
-    const { data: issues } = await supabase
-      .from('issues')
-      .select(`
-        id, issue_number, machine_id, type, status, description,
-        start_time, end_time, duration_minutes, downtime,
-        reported_by, assigned_to,
-        reporter:operators!issues_reported_by_fkey(name),
-        assignee:operators!issues_assigned_to_fkey(name)
-      `)
-      .gte('start_time', from.toISOString())
-      .lte('start_time', to.toISOString())
-      .order('start_time', { ascending: false })
+  useEffect(() => {
+    let cancelled = false
 
-    if (!issues) { setLoading(false); return }
+    async function fetchReports() {
+      setLoading(true)
 
-    // Flatten operator names
-    const flatIssues: ReportIssue[] = issues.map((i: any) => ({
-      ...i,
-      reporter_name: Array.isArray(i.reporter) ? i.reporter[0]?.name : i.reporter?.name ?? null,
-      assignee_name: Array.isArray(i.assignee) ? i.assignee[0]?.name : i.assignee?.name ?? null,
-    }))
+      const { data: issues } = await supabase
+        .from('issues')
+        .select(`
+          id, issue_number, machine_id, type, status, description,
+          start_time, end_time, duration_minutes, downtime,
+          reported_by, assigned_to,
+          reporter:operators!issues_reported_by_fkey(name),
+          assignee:operators!issues_assigned_to_fkey(name)
+        `)
+        .gte('start_time', fromISO)
+        .lte('start_time', toISO)
+        .order('start_time', { ascending: false })
 
-    // Summary
-    const summary = {
-      total: flatIssues.length,
-      breakdowns: flatIssues.filter(i => i.type === 'breakdown').length,
-      minor: flatIssues.filter(i => i.type === 'minor').length,
-      preventive: flatIssues.filter(i => i.type === 'preventive').length,
+      if (!issues || cancelled) { setLoading(false); return }
+
+      // Flatten operator names
+      const flatIssues: ReportIssue[] = issues.map((i: any) => ({
+        ...i,
+        reporter_name: Array.isArray(i.reporter) ? i.reporter[0]?.name : i.reporter?.name ?? null,
+        assignee_name: Array.isArray(i.assignee) ? i.assignee[0]?.name : i.assignee?.name ?? null,
+      }))
+
+      // Summary
+      const summary = {
+        total: flatIssues.length,
+        breakdowns: flatIssues.filter(i => i.type === 'breakdown').length,
+        minor: flatIssues.filter(i => i.type === 'minor').length,
+        preventive: flatIssues.filter(i => i.type === 'preventive').length,
+      }
+
+      // Downtime by machine
+      const dtMap: Record<string, number> = {}
+      for (const i of flatIssues.filter(i => i.type === 'breakdown' && i.status === 'resolved')) {
+        dtMap[i.machine_id] = (dtMap[i.machine_id] ?? 0) + (i.duration_minutes ?? 0)
+      }
+      const downtimeMachines = Object.entries(dtMap)
+        .map(([machine_id, total_minutes]) => ({ machine_id, total_minutes }))
+        .sort((a, b) => b.total_minutes - a.total_minutes)
+        .slice(0, 10)
+
+      const totalDowntimeMin = Object.values(dtMap).reduce((s, v) => s + v, 0)
+
+      // Operator stats
+      const opMap: Record<string, { name: string; resolved: number; totalMin: number }> = {}
+      for (const i of flatIssues.filter(i => i.status === 'resolved' && i.assigned_to)) {
+        const id = i.assigned_to!
+        const name = i.assignee_name ?? id
+        if (!opMap[id]) opMap[id] = { name, resolved: 0, totalMin: 0 }
+        opMap[id].resolved++
+        opMap[id].totalMin += i.duration_minutes ?? 0
+      }
+      const operatorStats = Object.values(opMap)
+        .map(v => ({ name: v.name, resolved: v.resolved, avg_minutes: v.resolved > 0 ? Math.round(v.totalMin / v.resolved) : 0 }))
+        .sort((a, b) => b.resolved - a.resolved)
+        .slice(0, 10)
+
+      if (!cancelled) {
+        setData({ summary, totalDowntimeMin, issues: flatIssues, downtimeMachines, operatorStats })
+        setLoading(false)
+      }
     }
 
-    // Downtime by machine
-    const dtMap: Record<string, number> = {}
-    for (const i of flatIssues.filter(i => i.type === 'breakdown' && i.status === 'resolved')) {
-      dtMap[i.machine_id] = (dtMap[i.machine_id] ?? 0) + (i.duration_minutes ?? 0)
-    }
-    const downtimeMachines = Object.entries(dtMap)
-      .map(([machine_id, total_minutes]) => ({ machine_id, total_minutes }))
-      .sort((a, b) => b.total_minutes - a.total_minutes)
-      .slice(0, 10)
-
-    const totalDowntimeMin = Object.values(dtMap).reduce((s, v) => s + v, 0)
-
-    // Operator stats
-    const opMap: Record<string, { name: string; resolved: number; totalMin: number }> = {}
-    for (const i of flatIssues.filter(i => i.status === 'resolved' && i.assigned_to)) {
-      const id = i.assigned_to!
-      const name = i.assignee_name ?? id
-      if (!opMap[id]) opMap[id] = { name, resolved: 0, totalMin: 0 }
-      opMap[id].resolved++
-      opMap[id].totalMin += i.duration_minutes ?? 0
-    }
-    const operatorStats = Object.values(opMap)
-      .map(v => ({ name: v.name, resolved: v.resolved, avg_minutes: v.resolved > 0 ? Math.round(v.totalMin / v.resolved) : 0 }))
-      .sort((a, b) => b.resolved - a.resolved)
-      .slice(0, 10)
-
-    setData({ summary, totalDowntimeMin, issues: flatIssues, downtimeMachines, operatorStats })
-    setLoading(false)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [from.toISOString(), to.toISOString()])
-
-  useEffect(() => { fetchReports() }, [fetchReports])
+    fetchReports()
+    return () => { cancelled = true }
+  }, [fromISO, toISO])
 
   const handleExportCSV = () => {
     if (!data) return
