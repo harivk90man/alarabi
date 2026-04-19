@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (badgeId: string) => Promise<{ error: string | null }>
   logout: () => void
   isAdmin: boolean
+  isTechnician: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAdmin: user?.role === 'admin',
+        isTechnician: user?.role === 'technician',
       }}
     >
       {children}

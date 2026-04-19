@@ -116,7 +116,7 @@ export function KpiCards() {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-24 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-card)' }} />
         ))}
       </div>
     )
@@ -131,7 +131,7 @@ export function KpiCards() {
           style={{ backgroundColor: bg, borderColor: border }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-600">{label}</span>
+            <span className="text-xs font-medium" style={{ color: '#4b5563' }}>{label}</span>
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center ${pulse ? 'animate-pulse' : ''}`}
               style={{ backgroundColor: color + '20' }}

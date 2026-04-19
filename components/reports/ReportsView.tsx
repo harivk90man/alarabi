@@ -20,6 +20,7 @@ export interface ReportIssue {
   issue_number: string
   machine_id: string
   type: string
+  maintenance_category_code: string | null
   status: string
   description: string
   start_time: string
@@ -28,6 +29,7 @@ export interface ReportIssue {
   downtime: boolean
   reported_by: string | null
   assigned_to: string | null
+  resolution: string | null
   reporter_name: string | null
   assignee_name: string | null
 }
@@ -38,6 +40,7 @@ export interface ReportData {
   issues: ReportIssue[]
   downtimeMachines: { machine_id: string; total_minutes: number }[]
   operatorStats: { name: string; resolved: number; avg_minutes: number }[]
+  categoryMap: Record<string, string>  // code → description
 }
 
 // ─── Period helpers ───────────────────────────────────────────────────────────
@@ -108,26 +111,37 @@ export function ReportsView() {
     async function fetchReports() {
       setLoading(true)
 
-      const { data: issues } = await supabase
-        .from('issues')
-        .select(`
-          id, issue_number, machine_id, type, status, description,
-          start_time, end_time, duration_minutes, downtime,
-          reported_by, assigned_to,
-          reporter:operators!issues_reported_by_fkey(name),
-          assignee:operators!issues_assigned_to_fkey(name)
-        `)
-        .gte('start_time', fromISO)
-        .lte('start_time', toISO)
-        .order('start_time', { ascending: false })
+      const [issueRes, catRes] = await Promise.all([
+        supabase
+          .from('issues')
+          .select(`
+            id, issue_number, machine_id, type, maintenance_category_code,
+            status, description, start_time, end_time, duration_minutes, downtime,
+            reported_by, assigned_to, resolution,
+            reporter:operators!issues_reported_by_fkey(name),
+            assignee:operators!issues_assigned_to_fkey(name)
+          `)
+          .gte('start_time', fromISO)
+          .lte('start_time', toISO)
+          .order('start_time', { ascending: false }),
+        supabase.from('maintenance_categories').select('code, description'),
+      ])
 
+      const issues = issueRes.data
       if (!issues || cancelled) { setLoading(false); return }
+
+      // Build code → description map
+      const categoryMap: Record<string, string> = {}
+      for (const c of (catRes.data ?? [])) {
+        categoryMap[(c as any).code] = (c as any).description
+      }
 
       // Flatten operator names
       const flatIssues: ReportIssue[] = issues.map((i: any) => ({
         ...i,
         reporter_name: Array.isArray(i.reporter) ? i.reporter[0]?.name : i.reporter?.name ?? null,
         assignee_name: Array.isArray(i.assignee) ? i.assignee[0]?.name : i.assignee?.name ?? null,
+        resolution: i.resolution ?? null,
       }))
 
       // Summary
@@ -165,7 +179,7 @@ export function ReportsView() {
         .slice(0, 10)
 
       if (!cancelled) {
-        setData({ summary, totalDowntimeMin, issues: flatIssues, downtimeMachines, operatorStats })
+        setData({ summary, totalDowntimeMin, issues: flatIssues, downtimeMachines, operatorStats, categoryMap })
         setLoading(false)
       }
     }
@@ -422,6 +436,53 @@ export function ReportsView() {
               </table>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Issues detail table */}
+      {!loading && data && data.issues.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-5 overflow-x-auto">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">Issues Detail</h2>
+          <table className="w-full text-xs min-w-[900px]">
+            <thead>
+              <tr className="border-b border-gray-100 text-gray-500 uppercase tracking-wide">
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Issue #</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Machine</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Type</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Category</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Status</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Assigned To</th>
+                <th className="text-left pb-2 pr-3 whitespace-nowrap">Duration</th>
+                <th className="text-left pb-2">Resolution</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {data.issues.map(issue => (
+                <tr key={issue.id} className="hover:bg-gray-50">
+                  <td className="py-2 pr-3 font-mono font-bold text-gray-700">{issue.issue_number}</td>
+                  <td className="py-2 pr-3 font-mono text-[#0d7a3e]">{issue.machine_id}</td>
+                  <td className="py-2 pr-3 capitalize">{issue.type}</td>
+                  <td className="py-2 pr-3 text-gray-500 max-w-[160px]">
+                    {issue.maintenance_category_code
+                      ? <span title={issue.maintenance_category_code}>
+                          {data.categoryMap[issue.maintenance_category_code] ?? issue.maintenance_category_code}
+                        </span>
+                      : '—'}
+                  </td>
+                  <td className="py-2 pr-3">
+                    <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                      issue.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                      issue.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>{issue.status.replace('_', ' ')}</span>
+                  </td>
+                  <td className="py-2 pr-3 text-gray-600">{issue.assignee_name ?? '—'}</td>
+                  <td className="py-2 pr-3 font-mono text-gray-500">{issue.duration_minutes ? formatDuration(issue.duration_minutes) : '—'}</td>
+                  <td className="py-2 text-gray-500 max-w-[200px] truncate">{issue.resolution || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

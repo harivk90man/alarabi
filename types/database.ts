@@ -9,6 +9,23 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      maintenance_categories: {
+        Row: {
+          code: string
+          description: string
+          discipline: 'mechanical' | 'electrical' | 'pneumatic' | 'hydraulic' | 'facilities' | 'general'
+        }
+        Insert: {
+          code: string
+          description: string
+          discipline?: 'mechanical' | 'electrical' | 'pneumatic' | 'hydraulic' | 'facilities' | 'general'
+        }
+        Update: {
+          code?: string
+          description?: string
+          discipline?: 'mechanical' | 'electrical' | 'pneumatic' | 'hydraulic' | 'facilities' | 'general'
+        }
+      }
       categories: {
         Row: {
           id: string
@@ -102,6 +119,8 @@ export interface Database {
           issue_number: string
           machine_id: string
           type: 'breakdown' | 'minor' | 'preventive'
+          severity: 'minor' | 'major' | 'severe'
+          maintenance_category_code: string | null
           description: string
           start_time: string
           end_time: string | null
@@ -119,6 +138,8 @@ export interface Database {
           issue_number?: string
           machine_id: string
           type: 'breakdown' | 'minor' | 'preventive'
+          severity?: 'minor' | 'major' | 'severe'
+          maintenance_category_code?: string | null
           description: string
           start_time?: string
           end_time?: string | null
@@ -135,6 +156,8 @@ export interface Database {
           issue_number?: string
           machine_id?: string
           type?: 'breakdown' | 'minor' | 'preventive'
+          severity?: 'minor' | 'major' | 'severe'
+          maintenance_category_code?: string | null
           description?: string
           start_time?: string
           end_time?: string | null
@@ -249,8 +272,10 @@ export type Issue = Database['public']['Tables']['issues']['Row']
 export type SparePart = Database['public']['Tables']['spare_parts']['Row']
 export type IssuePart = Database['public']['Tables']['issue_parts']['Row']
 export type AuditLog = Database['public']['Tables']['audit_log']['Row']
+export type MaintenanceCategory = Database['public']['Tables']['maintenance_categories']['Row']
 
 export type MachineStatus = 'Running' | 'Down' | 'Maintenance' | 'Minor Issue'
 export type IssueType = 'breakdown' | 'minor' | 'preventive'
+export type IssueSeverity = 'minor' | 'major' | 'severe'
 export type IssueStatus = 'open' | 'in_progress' | 'resolved'
 export type OperatorRole = 'operator' | 'admin' | 'technician'

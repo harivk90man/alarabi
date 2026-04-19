@@ -52,16 +52,21 @@ export function exportCSV(data: ReportData, from: Date, to: Date) {
 
   // Issues
   lines.push(...header('ALL ISSUES'))
-  lines.push('Issue #,Machine,Type,Status,Description,Reporter,Assigned To,Start Time,End Time,Duration (min),Downtime')
+  lines.push('Issue #,Machine,Type,Category,Status,Description,Reporter,Assigned To,Start Time,End Time,Duration (min),Downtime,Resolution')
   for (const i of data.issues) {
+    const catDesc = i.maintenance_category_code
+      ? (data.categoryMap?.[i.maintenance_category_code] ?? i.maintenance_category_code)
+      : ''
     const row = [
-      i.issue_number, i.machine_id, i.type, i.status,
+      i.issue_number, i.machine_id, i.type, `"${catDesc.replace(/"/g, '""')}"`,
+      i.status,
       `"${(i.description ?? '').replace(/"/g, '""')}"`,
       i.reporter_name ?? '', i.assignee_name ?? '',
       i.start_time ? new Date(i.start_time).toLocaleString('en-KW') : '',
       i.end_time ? new Date(i.end_time).toLocaleString('en-KW') : '',
       i.duration_minutes ?? '',
       i.downtime ? 'Yes' : 'No',
+      `"${(i.resolution ?? '').replace(/"/g, '""')}"`,
     ]
     lines.push(row.join(','))
   }
@@ -281,37 +286,43 @@ export async function exportPDF(data: ReportData, from: Date, to: Date) {
 
     autoTable(doc, {
       startY: y,
-      head: [['Issue #', 'Machine', 'Type', 'Status', 'Description', 'Assigned To', 'Duration']],
+      head: [['Issue #', 'Machine', 'Type', 'Category', 'Status', 'Assigned To', 'Duration', 'Resolution']],
       body: data.issues.map(i => [
         i.issue_number,
         i.machine_id,
         i.type,
+        i.maintenance_category_code
+          ? (data.categoryMap?.[i.maintenance_category_code] ?? i.maintenance_category_code)
+          : '—',
         i.status,
-        (i.description ?? '').substring(0, 50) + (i.description?.length > 50 ? '…' : ''),
         i.assignee_name ?? '—',
         i.duration_minutes ? fmtDur(i.duration_minutes) : '—',
+        (i.resolution ?? '').substring(0, 40) + ((i.resolution?.length ?? 0) > 40 ? '…' : ''),
       ]),
       margin: { left: margin, right: margin },
       headStyles: { fillColor: ACCENT, textColor: [255,255,255], fontStyle: 'bold', fontSize: 7 },
       bodyStyles: { fontSize: 7 },
       alternateRowStyles: { fillColor: [248, 250, 248] },
       columnStyles: {
-        0: { cellWidth: 18, font: 'courier' },
-        1: { cellWidth: 16, font: 'courier' },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 20 },
-        4: { cellWidth: 68 },
-        5: { cellWidth: 26 },
-        6: { cellWidth: 16 },
+        0: { cellWidth: 16, font: 'courier' },
+        1: { cellWidth: 14, font: 'courier' },
+        2: { cellWidth: 18 },
+        3: { cellWidth: 44 },   // Category description
+        4: { cellWidth: 18 },
+        5: { cellWidth: 24 },
+        6: { cellWidth: 14 },
+        7: { cellWidth: 34 },
       },
       didParseCell: (hookData) => {
+        // Type column (index 2)
         if (hookData.column.index === 2 && hookData.section === 'body') {
           const type = hookData.cell.text[0]
           if (type === 'breakdown') hookData.cell.styles.textColor = [220, 38, 38]
           else if (type === 'minor') hookData.cell.styles.textColor = [180, 83, 9]
           else if (type === 'preventive') hookData.cell.styles.textColor = [29, 78, 216]
         }
-        if (hookData.column.index === 3 && hookData.section === 'body') {
+        // Status column (index 4, after removing severity)
+        if (hookData.column.index === 4 && hookData.section === 'body') {
           const status = hookData.cell.text[0]
           if (status === 'resolved') hookData.cell.styles.textColor = [22, 163, 74]
           else if (status === 'open') hookData.cell.styles.textColor = [220, 38, 38]

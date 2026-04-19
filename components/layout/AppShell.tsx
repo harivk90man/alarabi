@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { Footer } from './Footer'
@@ -11,6 +11,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user && pathname !== '/') {
@@ -18,9 +19,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, pathname, router])
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafaf8]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--app-bg)' }}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-[#0d7a3e] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Loading...</p>
@@ -32,12 +38,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafaf8]">
-      <Header />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--app-bg)', color: 'var(--app-text)' }}>
+      <Header onMenuClick={() => setSidebarOpen(o => !o)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main className="flex-1 overflow-y-auto min-w-0">
+          <div className="p-4 md:p-6">
             {children}
           </div>
         </main>

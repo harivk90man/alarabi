@@ -54,24 +54,25 @@ export function CategoryHealth() {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5">
-      <h2 className="text-base font-semibold text-gray-900 mb-4">Category Health</h2>
+    <div className="rounded-lg border p-5"
+      style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Category Health</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {stats.map(({ name, total, down, pct }) => {
+        {stats.map(({ name, down, pct }) => {
           const barColor = pct === 100 ? '#16a34a' : pct >= 80 ? '#b45309' : '#dc2626'
           return (
             <div key={name} className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium text-gray-700 truncate">{name}</span>
-                <span className="text-xs font-mono text-gray-500 ml-2">{pct}%</span>
+                <span className="text-xs font-medium truncate" style={{ color: 'var(--app-text)' }}>{name}</span>
+                <span className="text-xs font-mono ml-2" style={{ color: 'var(--app-text-muted)' }}>{pct}%</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${pct}%`, backgroundColor: barColor }}
                 />
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs" style={{ color: 'var(--app-text-muted)' }}>
                 {pct}% operational
                 {down > 0 && (
                   <span className="text-red-500 ml-1">· {down} down</span>

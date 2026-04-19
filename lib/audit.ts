@@ -4,6 +4,7 @@ export type AuditAction =
   | 'ISSUE_CREATED'
   | 'ISSUE_RESOLVED'
   | 'ISSUE_UPDATED'
+  | 'ISSUE_ASSIGNED'
   | 'PART_USED'
   | 'MACHINE_STATUS_CHANGED'
   | 'PART_STOCK_UPDATED'
