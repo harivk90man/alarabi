@@ -38,7 +38,7 @@ export function Header({ onMenuClick }: Props) {
   return (
     <header
       className="sticky top-0 z-50 w-full"
-      style={{ backgroundColor: '#0d3320', borderBottom: '3px solid #16a34a' }}
+      style={{ backgroundColor: '#0a2540', borderBottom: '3px solid #1d4ed8' }}
     >
       <div className="flex h-16 items-center px-4 gap-3">
         {/* Hamburger — mobile only */}
@@ -53,12 +53,11 @@ export function Header({ onMenuClick }: Props) {
         {/* Logo */}
         <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
           <Image
-            src="https://img1.wsimg.com/isteam/ip/c1812088-d5b4-4d7c-b39c-afa691bded3c/White%404x.png"
+            src="/logo.png"
             alt="Al Arabi Plastic Factory"
             width={100}
             height={30}
             className="object-contain flex-shrink-0"
-            unoptimized
           />
           <div className="hidden sm:block w-px h-8 bg-white/20" />
           <div className="hidden sm:block min-w-0">

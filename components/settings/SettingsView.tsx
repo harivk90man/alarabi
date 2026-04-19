@@ -26,9 +26,9 @@ export function SettingsView() {
             onClick={() => setTheme('light')}
             className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
             style={{
-              borderColor: theme === 'light' ? '#0d7a3e' : 'var(--app-card-border)',
-              backgroundColor: theme === 'light' ? '#f0fdf4' : 'var(--app-card)',
-              color: theme === 'light' ? '#0d7a3e' : 'var(--app-text-muted)',
+              borderColor: theme === 'light' ? '#1d4ed8' : 'var(--app-card-border)',
+              backgroundColor: theme === 'light' ? '#eff6ff' : 'var(--app-card)',
+              color: theme === 'light' ? '#1d4ed8' : 'var(--app-text-muted)',
             }}
           >
             <Sun className="w-6 h-6" />
@@ -38,9 +38,9 @@ export function SettingsView() {
             onClick={() => setTheme('dark')}
             className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
             style={{
-              borderColor: theme === 'dark' ? '#0d7a3e' : 'var(--app-card-border)',
-              backgroundColor: theme === 'dark' ? '#f0fdf4' : 'var(--app-card)',
-              color: theme === 'dark' ? '#0d7a3e' : 'var(--app-text-muted)',
+              borderColor: theme === 'dark' ? '#1d4ed8' : 'var(--app-card-border)',
+              backgroundColor: theme === 'dark' ? '#eff6ff' : 'var(--app-card)',
+              color: theme === 'dark' ? '#1d4ed8' : 'var(--app-text-muted)',
             }}
           >
             <Moon className="w-6 h-6" />
@@ -60,9 +60,9 @@ export function SettingsView() {
             onClick={() => setLang('en')}
             className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
             style={{
-              borderColor: lang === 'en' ? '#0d7a3e' : 'var(--app-card-border)',
-              backgroundColor: lang === 'en' ? '#f0fdf4' : 'var(--app-card)',
-              color: lang === 'en' ? '#0d7a3e' : 'var(--app-text-muted)',
+              borderColor: lang === 'en' ? '#1d4ed8' : 'var(--app-card-border)',
+              backgroundColor: lang === 'en' ? '#eff6ff' : 'var(--app-card)',
+              color: lang === 'en' ? '#1d4ed8' : 'var(--app-text-muted)',
             }}
           >
             <span className="text-2xl">🇬🇧</span>
@@ -72,9 +72,9 @@ export function SettingsView() {
             onClick={() => setLang('ar')}
             className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
             style={{
-              borderColor: lang === 'ar' ? '#0d7a3e' : 'var(--app-card-border)',
-              backgroundColor: lang === 'ar' ? '#f0fdf4' : 'var(--app-card)',
-              color: lang === 'ar' ? '#0d7a3e' : 'var(--app-text-muted)',
+              borderColor: lang === 'ar' ? '#1d4ed8' : 'var(--app-card-border)',
+              backgroundColor: lang === 'ar' ? '#eff6ff' : 'var(--app-card)',
+              color: lang === 'ar' ? '#1d4ed8' : 'var(--app-text-muted)',
             }}
           >
             <span className="text-2xl">🇰🇼</span>

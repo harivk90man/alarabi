@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FileText, Download, Loader2, CalendarRange } from 'lucide-react'
 import { exportCSV, exportPDF } from '@/lib/report-export'
+import { getSparePartsUsageReport } from '@/lib/queries'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,10 @@ export function ReportsView() {
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
+  const [partsUsage, setPartsUsage] = useState<{
+    byCategory: { category: string; stock_category: string | null; total_used: number; total_cost: number }[]
+    topConsumed: { part_number: string; name: string; category: string | null; total_used: number; unit_cost: number }[]
+  } | null>(null)
 
   // Stable ISO strings — only recompute when period/custom inputs change
   const { fromISO, toISO } = useMemo(() => {
@@ -188,6 +193,11 @@ export function ReportsView() {
     return () => { cancelled = true }
   }, [fromISO, toISO])
 
+  // Fetch spare parts usage report
+  useEffect(() => {
+    getSparePartsUsageReport(fromISO, toISO).then(setPartsUsage)
+  }, [fromISO, toISO])
+
   const handleExportCSV = () => {
     if (!data) return
     exportCSV(data, from, to)
@@ -226,7 +236,7 @@ export function ReportsView() {
           <p className="text-gray-500 text-sm mt-1">
             Analytics and performance insights
             {!loading && data && (
-              <span className="ml-2 text-[#0d7a3e] font-medium">
+              <span className="ml-2 text-[#1d4ed8] font-medium">
                 · {data.summary.total} issues in period
               </span>
             )}
@@ -270,8 +280,8 @@ export function ReportsView() {
               onClick={() => setPeriod(key)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
                 period === key
-                  ? 'bg-[#0d7a3e] text-white border-[#0d7a3e]'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#0d7a3e] hover:text-[#0d7a3e]'
+                  ? 'bg-[#1d4ed8] text-white border-[#1d4ed8]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#1d4ed8] hover:text-[#1d4ed8]'
               }`}
             >
               {key === 'custom' && <CalendarRange className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
@@ -396,7 +406,7 @@ export function ReportsView() {
                   <Tooltip formatter={(v: number) => [formatDuration(v), 'Downtime']} />
                   <Bar dataKey="total_minutes" radius={[0, 4, 4, 0]}>
                     {data.downtimeMachines.map((_, i) => (
-                      <Cell key={i} fill={i === 0 ? '#dc2626' : i === 1 ? '#b45309' : '#0d7a3e'} />
+                      <Cell key={i} fill={i === 0 ? '#dc2626' : i === 1 ? '#b45309' : '#1d4ed8'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -439,6 +449,75 @@ export function ReportsView() {
         </div>
       )}
 
+      {/* Spare Parts Usage */}
+      {!loading && partsUsage && (partsUsage.byCategory.length > 0 || partsUsage.topConsumed.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* By category */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Parts Usage by Category (KWD)</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                  <th className="text-left pb-2">Category</th>
+                  <th className="text-left pb-2">Sub-Category</th>
+                  <th className="text-right pb-2">Used</th>
+                  <th className="text-right pb-2">Value (KWD)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {partsUsage.byCategory.slice(0, 15).map((row, i) => (
+                  <tr key={i}>
+                    <td className="py-2 text-gray-800">{row.category}</td>
+                    <td className="py-2 text-gray-500 text-xs">{row.stock_category ?? '—'}</td>
+                    <td className="py-2 text-right font-mono">{row.total_used}</td>
+                    <td className="py-2 text-right font-mono font-medium">{row.total_cost.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {partsUsage.byCategory.length > 0 && (
+                <tfoot>
+                  <tr className="border-t border-gray-200">
+                    <td colSpan={3} className="py-2 font-semibold text-gray-800">Total</td>
+                    <td className="py-2 text-right font-mono font-bold">
+                      {partsUsage.byCategory.reduce((s, r) => s + r.total_cost, 0).toFixed(2)} KWD
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+
+          {/* Top consumed */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top 10 Most-Consumed Parts</h2>
+            {partsUsage.topConsumed.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-8">No parts consumed in this period</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                    <th className="text-left pb-2">Part</th>
+                    <th className="text-left pb-2">Name</th>
+                    <th className="text-right pb-2">Used</th>
+                    <th className="text-right pb-2">Cost/Unit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {partsUsage.topConsumed.map(p => (
+                    <tr key={p.part_number}>
+                      <td className="py-2 font-mono text-xs text-gray-600">{p.part_number}</td>
+                      <td className="py-2 text-gray-800 max-w-[160px] truncate">{p.name}</td>
+                      <td className="py-2 text-right font-mono font-bold">{p.total_used}</td>
+                      <td className="py-2 text-right font-mono text-gray-500">{p.unit_cost > 0 ? `${p.unit_cost.toFixed(2)}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Issues detail table */}
       {!loading && data && data.issues.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-5 overflow-x-auto">
@@ -460,7 +539,7 @@ export function ReportsView() {
               {data.issues.map(issue => (
                 <tr key={issue.id} className="hover:bg-gray-50">
                   <td className="py-2 pr-3 font-mono font-bold text-gray-700">{issue.issue_number}</td>
-                  <td className="py-2 pr-3 font-mono text-[#0d7a3e]">{issue.machine_id}</td>
+                  <td className="py-2 pr-3 font-mono text-[#1d4ed8]">{issue.machine_id}</td>
                   <td className="py-2 pr-3 capitalize">{issue.type}</td>
                   <td className="py-2 pr-3 text-gray-500 max-w-[160px]">
                     {issue.maintenance_category_code

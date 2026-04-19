@@ -71,7 +71,7 @@ export function OpenIssuesList() {
             </span>
           )}
         </h2>
-        <Link href="/issues" className="text-xs text-[#0d7a3e] hover:underline">
+        <Link href="/issues" className="text-xs text-[#1d4ed8] hover:underline">
           View all →
         </Link>
       </div>
@@ -106,7 +106,7 @@ export function OpenIssuesList() {
                     <span className="font-mono text-xs font-bold" style={{ color: 'var(--app-text-muted)' }}>
                       {issue.issue_number}
                     </span>
-                    <span className="font-mono text-xs font-semibold text-[#0d7a3e]">
+                    <span className="font-mono text-xs font-semibold text-[#1d4ed8]">
                       {issue.machine_id}
                     </span>
                     <Badge variant={statusVariant[issue.status] ?? 'outline'} className="text-[10px] px-1.5 py-0">
@@ -131,7 +131,7 @@ export function OpenIssuesList() {
                   <div className="flex items-center gap-2 mt-1 text-[11px]" style={{ color: 'var(--app-text-muted)' }}>
                     <span>{timeAgo(issue.start_time)}</span>
                     {issue.assignee
-                      ? <span className="text-[#0d7a3e] font-medium">· {(issue.assignee as any).name}</span>
+                      ? <span className="text-[#1d4ed8] font-medium">· {(issue.assignee as any).name}</span>
                       : <span className="text-amber-500 font-medium">· Unassigned</span>
                     }
                   </div>

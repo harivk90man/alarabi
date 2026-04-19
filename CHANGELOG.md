@@ -39,6 +39,23 @@ This version reflects what's actually in production as of April 2026. The v1 bri
 - `00X_maintenance_categories.sql` — creates and seeds the maintenance_categories table (exact filename varies; check your `supabase/migrations/` folder)
 - `00X_technician_role.sql` — promotes 6 specific operators to technician role (exact filename varies)
 
+### v2.1 — Frontend sync + rebrand (April 2026)
+
+- **Rebranded from forest green to corporate navy** to match arabiplastic.com
+  - Header/sidebar: `#0d3320` → `#0a2540` (deep navy)
+  - Primary accent: `#0d7a3e` → `#1d4ed8` (royal blue)
+  - Success green (`#16a34a`) preserved for status indicators (Running, Resolved, OK)
+- **Added official logo** — downloaded from arabiplastic.com, hosted at `public/logo.png`
+- **Footer updated** — now displays ISO 9001 · ISO 14001 · ISO 45001 certifications, full contact info, AlKhudairi Group attribution
+- **Login page refreshed** — navy gradient background, centered card, Arabic caption
+- **spare_parts schema synced** — TypeScript types now include `description`, `unit`, `stock_category` columns
+- **Spares page rebuilt** — pagination (50/page), category filter, stock status filter, search across name/part_number/description, unit column, KWD labels, detail/edit modal, duplicate code badge
+- **Issue form parts picker** — search input for 2,837 parts (server-side ilike), shows stock with unit
+- **Reports page** — spare parts usage section (by category with KWD value, top 10 most-consumed)
+- **Inactive users** — blocked at login with polite message ("Account inactive, contact supervisor")
+- **i18n** — 30+ new translation keys added to both English and Arabic
+- **Dark mode** — updated CSS variables for navy-based dark theme (slate surfaces instead of gray)
+
 ### Not yet built (future work)
 
 Same as v1 — IoT integration, photo attachments, push notifications, shift management, production tracking, maintenance scheduling calendar, QR code scanning. Excel export is now the only export format missing (PDF + CSV are done).

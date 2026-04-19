@@ -39,16 +39,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const trimmed = badgeId.trim()
     if (!trimmed) return { error: 'Please enter your badge ID' }
 
-    const { data, error } = await supabase
+    // First check if user exists at all (active or inactive)
+    const { data: anyUser } = await supabase
       .from('operators')
       .select('*')
       .eq('id', trimmed)
-      .eq('is_active', true)
       .single()
 
-    if (error || !data) {
+    if (!anyUser) {
       return { error: 'Badge ID not found. Please check and try again.' }
     }
+
+    if (!anyUser.is_active) {
+      return { error: 'Account inactive. Please contact your supervisor.' }
+    }
+
+    const data = anyUser
 
     setUser(data)
     localStorage.setItem(SESSION_KEY, JSON.stringify(data))

@@ -12,20 +12,32 @@
     --card-foreground: 60 5% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 60 5% 10%;
-    --primary: 148 74% 26%;
+    --primary: 224 76% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 60 5% 96%;
     --secondary-foreground: 60 5% 10%;
     --muted: 60 5% 96%;
     --muted-foreground: 60 5% 45%;
-    --accent: 142 69% 35%;
+    --accent: 224 76% 48%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --border: 60 5% 90%;
     --input: 60 5% 90%;
-    --ring: 148 74% 26%;
+    --ring: 224 76% 48%;
     --radius: 0.5rem;
+
+    /* Brand — Al Arabi corporate navy */
+    --brand-primary: #0a2540;
+    --brand-primary-600: #12315a;
+    --brand-accent: #1d4ed8;
+    --brand-accent-hover: #1e40af;
+
+    /* Semantic */
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #b45309;
+    --info: #1d4ed8;
 
     /* Light app surface */
     --app-bg: #fafaf8;
@@ -41,30 +53,36 @@
   }
 
   .dark {
-    --background: 222 20% 12%;
-    --foreground: 210 20% 92%;
-    --card: 222 20% 16%;
-    --card-foreground: 210 20% 92%;
-    --popover: 222 20% 14%;
-    --popover-foreground: 210 20% 92%;
-    --secondary: 222 20% 18%;
-    --secondary-foreground: 210 20% 85%;
-    --muted: 222 20% 18%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 16%;
+    --secondary-foreground: 210 40% 85%;
+    --muted: 222 47% 16%;
     --muted-foreground: 215 15% 60%;
     --border: 222 15% 22%;
     --input: 222 15% 22%;
 
+    /* Brand — dark mode */
+    --brand-primary: #0a1929;
+    --brand-accent: #3b82f6;
+
     /* Dark app surface */
-    --app-bg: #0f1117;
-    --app-card: #1a1f2e;
-    --app-card-border: #2d3448;
-    --app-text: #e8eaf0;
-    --app-text-muted: #8892a4;
-    --app-sidebar-bg: #141824;
-    --app-sidebar-border: #252d40;
-    --app-nav-hover: #1e2535;
+    --app-bg: #0f172a;
+    --app-card: #1e293b;
+    --app-card-border: #334155;
+    --app-text: #f1f5f9;
+    --app-text-muted: #94a3b8;
+    --app-sidebar-bg: #0f172a;
+    --app-sidebar-border: #1e293b;
+    --app-nav-hover: #1e293b;
     --app-nav-active-text: #ffffff;
-    --app-input-bg: #1e2535;
+    --app-input-bg: #1e293b;
   }
 
   * {
@@ -105,6 +123,6 @@
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #16a34a #f0f0f0;
+    scrollbar-color: #64748b #f0f0f0;
   }
 }

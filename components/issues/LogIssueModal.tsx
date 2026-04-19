@@ -76,7 +76,7 @@ export function LogIssueModal({ open, onClose, defaultMachineId, reportedBy, onS
     const noOp = Promise.resolve({ data: [] })
     Promise.all([
       supabase.from('machines').select('id, name').order('id'),
-      showParts     ? supabase.from('spare_parts').select('*').order('name')                                                      : noOp,
+      showParts     ? supabase.from('spare_parts').select('*').order('part_number').limit(20)                                      : noOp,
       showCategory  ? supabase.from('maintenance_categories').select('*').order('code')                                           : noOp,
       showAssign    ? supabase.from('operators').select('*').eq('is_active', true).eq('role', 'technician').order('name')         : noOp,
     ]).then(([m, s, mc, tech]) => {
@@ -276,6 +276,21 @@ export function LogIssueModal({ open, onClose, defaultMachineId, reportedBy, onS
           {showParts && (
             <div className="space-y-2">
               <Label>Spare Parts Used</Label>
+              <Input
+                placeholder="Search parts by number, name, or description..."
+                onChange={async (e) => {
+                  const q = e.target.value.trim()
+                  if (!q) {
+                    const { data } = await supabase.from('spare_parts').select('*').order('part_number').limit(20)
+                    setSpareParts((data ?? []) as SparePart[])
+                    return
+                  }
+                  const s = `%${q}%`
+                  const { data } = await supabase.from('spare_parts').select('*').or(`part_number.ilike.${s},name.ilike.${s},description.ilike.${s}`).order('part_number').limit(20)
+                  setSpareParts((data ?? []) as SparePart[])
+                }}
+                className="text-sm"
+              />
               <div className="flex gap-2">
                 <Select value={selectedPart} onValueChange={setSelectedPart}>
                   <SelectTrigger className="flex-1">
@@ -284,7 +299,7 @@ export function LogIssueModal({ open, onClose, defaultMachineId, reportedBy, onS
                   <SelectContent>
                     {spareParts.map(p => (
                       <SelectItem key={p.id} value={p.id}>
-                        <span className="font-mono">{p.part_number}</span> — {p.name} (qty: {p.quantity})
+                        <span className="font-mono">{p.part_number}</span> — {p.name} ({p.quantity} {(p as any).unit ?? 'PIECE'} in stock)
                       </SelectItem>
                     ))}
                   </SelectContent>

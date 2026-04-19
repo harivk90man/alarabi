@@ -117,7 +117,7 @@ export function Sidebar({ open, onClose }: Props) {
             href={href}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-              active ? 'bg-[#0d7a3e] text-white' : 'hover:text-gray-900'
+              active ? 'bg-[#1d4ed8] text-white' : 'hover:text-gray-900'
             )}
             style={active ? {} : { color: 'var(--app-text-muted)' }}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--app-nav-hover)' }}
@@ -161,7 +161,7 @@ export function Sidebar({ open, onClose }: Props) {
       >
         <div
           className="flex items-center justify-between px-4 h-16 flex-shrink-0"
-          style={{ backgroundColor: '#0d3320', borderBottom: '3px solid #16a34a' }}
+          style={{ backgroundColor: '#0a2540', borderBottom: '3px solid #1d4ed8' }}
         >
           <span className="text-white font-semibold text-sm">{t('maintenanceTracker')}</span>
           <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">

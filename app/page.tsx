@@ -9,7 +9,6 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { LogIn, Factory } from 'lucide-react'
 
 export default function LoginPage() {
@@ -39,17 +38,16 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ backgroundColor: '#0d3320' }}
+      style={{ background: 'linear-gradient(135deg, #0a2540 0%, #12315a 50%, #1d4ed8 100%)' }}
     >
       {/* Header bar */}
-      <div style={{ borderBottom: '3px solid #16a34a' }} className="px-6 py-4">
+      <div style={{ borderBottom: '3px solid #1d4ed8' }} className="px-6 py-4">
         <Image
-          src="https://img1.wsimg.com/isteam/ip/c1812088-d5b4-4d7c-b39c-afa691bded3c/White%404x.png"
+          src="/logo.png"
           alt="Al Arabi Plastic Factory"
           width={140}
           height={40}
           className="object-contain"
-          unoptimized
         />
       </div>
 
@@ -60,16 +58,18 @@ export default function LoginPage() {
             {/* Card header */}
             <div
               className="px-8 py-6 text-center"
-              style={{ backgroundColor: '#0d7a3e' }}
+              style={{ backgroundColor: '#0a2540' }}
             >
               <div className="flex justify-center mb-3">
-                <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center">
                   <Factory className="w-7 h-7 text-white" />
                 </div>
               </div>
-              <h1 className="text-white text-xl font-bold">Maintenance Tracker</h1>
-              <p className="text-white/80 text-sm mt-1">Al Arabi Plastic Factory</p>
-              <p className="text-white/60 text-xs mt-0.5">المصنع العربي للبلاستيك</p>
+              <h1 className="text-white text-xl font-bold">AlArabi Plastic Factory</h1>
+              <p className="text-white/80 text-sm mt-1">Maintenance Tracker</p>
+              <p className="text-white/50 text-xs mt-1 font-medium tracking-wide">
+                نظام متابعة الصيانة
+              </p>
             </div>
 
             {/* Form */}
@@ -126,8 +126,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 text-center text-white/40 text-xs">
-            Sabhan Industrial, Block 8 · Kuwait ·{' '}
-            <span className="font-mono">+965 2439 0000</span>
+            AlKhudairi Group · Est. 1983
           </div>
         </div>
       </div>
@@ -135,10 +134,10 @@ export default function LoginPage() {
       {/* Footer */}
       <div
         className="px-6 py-4 text-center"
-        style={{ borderTop: '3px solid #16a34a' }}
+        style={{ borderTop: '3px solid #1d4ed8' }}
       >
         <p className="text-white/30 text-xs">
-          © 2026 Al Arabi Plastic Factory — A subsidiary of AlKhudairi Group · Internal Use Only
+          Al Arabi Plastic Factory · Sabhan Industrial, Kuwait · ISO 9001 · ISO 14001 · ISO 45001
         </p>
       </div>
     </div>

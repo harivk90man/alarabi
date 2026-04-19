@@ -22,7 +22,7 @@ const actionColors: Record<string, string> = {
   ISSUE_RESOLVED: '#16a34a',
   PART_USED: '#b45309',
   PART_STOCK_UPDATED: '#7c3aed',
-  MACHINE_STATUS_CHANGED: '#0d7a3e',
+  MACHINE_STATUS_CHANGED: '#1d4ed8',
   OPERATOR_LOGIN: '#374151',
   OPERATOR_LOGOUT: '#6b7280',
 }

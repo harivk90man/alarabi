@@ -96,13 +96,31 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
   // Load support data for users who can resolve
   useEffect(() => {
     if (!canResolve) return
-    Promise.all([
-      supabase.from('maintenance_categories').select('*').order('code'),
-      supabase.from('spare_parts').select('*').order('name'),
-    ]).then(([mc, sp]) => {
-      setCategories((mc.data ?? []) as MaintenanceCategory[])
-      setSpareParts((sp.data ?? []) as SparePart[])
-    })
+    supabase.from('maintenance_categories').select('*').order('code')
+      .then(({ data }) => setCategories((data ?? []) as MaintenanceCategory[]))
+  }, [canResolve]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Search spare parts on demand (2,837 parts — can't load all at once)
+  const searchParts = async (q: string) => {
+    if (!q.trim()) {
+      const { data } = await supabase.from('spare_parts').select('*').order('part_number').limit(20)
+      setSpareParts((data ?? []) as SparePart[])
+      return
+    }
+    const s = `%${q.trim()}%`
+    const { data } = await supabase
+      .from('spare_parts')
+      .select('*')
+      .or(`part_number.ilike.${s},name.ilike.${s},description.ilike.${s}`)
+      .order('part_number')
+      .limit(20)
+    setSpareParts((data ?? []) as SparePart[])
+  }
+
+  // Initial load of first 20 parts
+  useEffect(() => {
+    if (!canResolve) return
+    searchParts('')
   }, [canResolve]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load technicians for admin assign dropdown
@@ -281,7 +299,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <span className="font-mono text-sm font-bold text-gray-700">{issue.issue_number}</span>
-                    <span className="font-mono text-sm font-medium text-[#0d7a3e]">{issue.machine_id}</span>
+                    <span className="font-mono text-sm font-medium text-[#1d4ed8]">{issue.machine_id}</span>
                     {issue.description && (
                       <Badge variant={typeVariant[issue.type] ?? 'outline'} className="text-xs">{issue.type}</Badge>
                     )}
@@ -306,7 +324,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                     <span>Reported: {timeAgo(issue.start_time)}</span>
                     {issue.end_time && <span>Duration: {formatDuration(issue.duration_minutes ?? 0)}</span>}
                     {issue.reporter && <span>By: <span className="font-medium">{(issue.reporter as any).name}</span></span>}
-                    {issue.assignee && <span>Assigned: <span className="font-medium text-[#0d7a3e]">{(issue.assignee as any).name}</span></span>}
+                    {issue.assignee && <span>Assigned: <span className="font-medium text-[#1d4ed8]">{(issue.assignee as any).name}</span></span>}
                   </div>
 
                   {issue.resolution && (
@@ -443,6 +461,11 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                   {/* Spare Parts Used */}
                   <div>
                     <Label className="text-xs font-medium text-gray-600 mb-1 block">Spare Parts Used</Label>
+                    <Input
+                      placeholder="Search parts by number, name, or description..."
+                      onChange={e => searchParts(e.target.value)}
+                      className="h-8 text-xs mb-2"
+                    />
                     <div className="flex gap-2">
                       <Select value={resolveSelectedPart} onValueChange={setResolveSelectedPart}>
                         <SelectTrigger className="flex-1 h-8 text-xs">
@@ -451,7 +474,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                         <SelectContent>
                           {spareParts.map(p => (
                             <SelectItem key={p.id} value={p.id}>
-                              <span className="font-mono">{p.part_number}</span> — {p.name} (qty: {p.quantity})
+                              <span className="font-mono">{p.part_number}</span> — {p.name} ({p.quantity} {(p as any).unit ?? 'PIECE'} in stock)
                             </SelectItem>
                           ))}
                         </SelectContent>

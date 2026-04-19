@@ -138,7 +138,7 @@ export function MachinesView() {
                   return (
                     <tr
                       key={machine.id}
-                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-green-50' : ''}`}
+                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
                       onClick={() => setSelected(isSelected ? null : machine)}
                     >
                       <td className="px-4 py-3">

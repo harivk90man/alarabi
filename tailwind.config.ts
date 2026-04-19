@@ -19,11 +19,12 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Al Arabi Brand Colors
+        // Al Arabi Brand Colors — corporate navy
         brand: {
-          green: "#0d7a3e",
-          header: "#0d3320",
-          accent: "#16a34a",
+          primary: "#0a2540",
+          "primary-600": "#12315a",
+          accent: "#1d4ed8",
+          "accent-hover": "#1e40af",
           bg: "#fafaf8",
           text: "#1a1a18",
         },
@@ -34,7 +35,7 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0d7a3e",
+          DEFAULT: "#1d4ed8",
           foreground: "#ffffff",
         },
         secondary: {
@@ -50,7 +51,7 @@ const config: Config = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "#16a34a",
+          DEFAULT: "#1d4ed8",
           foreground: "#ffffff",
         },
         popover: {
@@ -61,7 +62,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Status colors
+        // Status colors — success stays green
         status: {
           running: "#16a34a",
           down: "#dc2626",

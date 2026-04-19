@@ -20,10 +20,9 @@ function loadImageAsDataURL(src: string): Promise<string> {
   })
 }
 
-const LOGO_URL = '/logo-white.png'  // served from same origin — no CORS
-const BRAND_GREEN = '#0d7a3e'
-const HEADER_BG: [number, number, number] = [13, 51, 32]   // #0d3320
-const ACCENT: [number, number, number] = [13, 122, 62]     // #0d7a3e
+const LOGO_URL = '/logo.png'  // served from same origin — no CORS
+const HEADER_BG: [number, number, number] = [10, 37, 64]    // #0a2540
+const ACCENT: [number, number, number] = [29, 78, 216]      // #1d4ed8
 
 function formatDate(d: Date) {
   return d.toLocaleDateString('en-KW', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -297,7 +296,7 @@ export async function exportPDF(data: ReportData, from: Date, to: Date) {
         i.status,
         i.assignee_name ?? '—',
         i.duration_minutes ? fmtDur(i.duration_minutes) : '—',
-        (i.resolution ?? '').substring(0, 40) + ((i.resolution?.length ?? 0) > 40 ? '…' : ''),
+        (i.resolution ?? '').substring(0, 40) + ((i.resolution?.length ?? 0) > 40 ? '...' : ''),
       ]),
       margin: { left: margin, right: margin },
       headStyles: { fillColor: ACCENT, textColor: [255,255,255], fontStyle: 'bold', fontSize: 7 },
@@ -307,21 +306,19 @@ export async function exportPDF(data: ReportData, from: Date, to: Date) {
         0: { cellWidth: 16, font: 'courier' },
         1: { cellWidth: 14, font: 'courier' },
         2: { cellWidth: 18 },
-        3: { cellWidth: 44 },   // Category description
+        3: { cellWidth: 44 },
         4: { cellWidth: 18 },
         5: { cellWidth: 24 },
         6: { cellWidth: 14 },
         7: { cellWidth: 34 },
       },
       didParseCell: (hookData) => {
-        // Type column (index 2)
         if (hookData.column.index === 2 && hookData.section === 'body') {
           const type = hookData.cell.text[0]
           if (type === 'breakdown') hookData.cell.styles.textColor = [220, 38, 38]
           else if (type === 'minor') hookData.cell.styles.textColor = [180, 83, 9]
           else if (type === 'preventive') hookData.cell.styles.textColor = [29, 78, 216]
         }
-        // Status column (index 4, after removing severity)
         if (hookData.column.index === 4 && hookData.section === 'body') {
           const status = hookData.cell.text[0]
           if (status === 'resolved') hookData.cell.styles.textColor = [22, 163, 74]
@@ -342,7 +339,7 @@ export async function exportPDF(data: ReportData, from: Date, to: Date) {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(7)
     doc.setFont('helvetica', 'normal')
-    doc.text('Al Arabi Plastic Factory · Sabhan Industrial, Kuwait · Internal Use Only', margin, pageH - 5)
+    doc.text('Al Arabi Plastic Factory · Sabhan Industrial, Kuwait · ISO 9001 · ISO 14001 · ISO 45001', margin, pageH - 5)
     doc.text(`Page ${p} of ${totalPages}`, pageW - margin, pageH - 5, { align: 'right' })
   }
 

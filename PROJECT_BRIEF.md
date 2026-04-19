@@ -41,8 +41,10 @@ A production-grade maintenance tracking system for Al Arabi Plastic Factory, man
 
 | Element | Value |
 |---|---|
-| Primary Green | `#0d7a3e` |
-| Header Background | `#0d3320` (deep forest green) |
+| Primary Navy | `#0a2540` (deep navy — main header, sidebar) |
+| Primary 600 | `#12315a` (slightly lighter navy) |
+| Accent Blue | `#1d4ed8` (royal blue — primary CTAs, links) |
+| Accent Hover | `#1e40af` (CTA hover) |
 | Success | `#16a34a` |
 | Error | `#dc2626` |
 | Warning | `#b45309` |
@@ -51,6 +53,7 @@ A production-grade maintenance tracking system for Al Arabi Plastic Factory, man
 | Surface | `#ffffff` |
 | Text | `#1a1a18` |
 | Font | IBM Plex Sans + IBM Plex Mono (for IDs/timestamps) |
+| Logo | Hosted locally at `/public/logo.png` (white version from arabiplastic.com) |
 
 **Currency:** KWD (Kuwaiti Dinar) throughout — spare parts values, cost reporting.
 

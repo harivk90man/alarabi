@@ -175,10 +175,13 @@ export interface Database {
           id: string
           part_number: string
           name: string
+          description: string | null
           category: string | null
+          stock_category: string | null
           quantity: number
           min_quantity: number
           unit_cost: number
+          unit: string
           location: string | null
           created_at: string
           updated_at: string
@@ -187,10 +190,13 @@ export interface Database {
           id?: string
           part_number: string
           name: string
+          description?: string | null
           category?: string | null
+          stock_category?: string | null
           quantity?: number
           min_quantity?: number
           unit_cost?: number
+          unit?: string
           location?: string | null
           created_at?: string
           updated_at?: string
@@ -199,10 +205,13 @@ export interface Database {
           id?: string
           part_number?: string
           name?: string
+          description?: string | null
           category?: string | null
+          stock_category?: string | null
           quantity?: number
           min_quantity?: number
           unit_cost?: number
+          unit?: string
           location?: string | null
           created_at?: string
           updated_at?: string
