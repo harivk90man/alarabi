@@ -1,88 +1,164 @@
-# Al Arabi Plastic Factory — Maintenance Tracker MVP
+# Al Arabi Plastic Factory — Maintenance Tracker
 
-## PROJECT BRIEF FOR CLAUDE CODE
+## PROJECT BRIEF v2 (current production state)
 
 **Company:** Al Arabi Plastic Factory (المصنع العربي للبلاستيك)
 **Location:** Sabhan Industrial, Block 8, St 105, Bldg 170, Kuwait
 **Website:** arabiplastic.com
-**Logo URL:** https://img1.wsimg.com/isteam/ip/c1812088-d5b4-4d7c-b39c-afa691bded3c/White%404x.png
-**Parent:** AlKhudairi Group | Est. 1983
-**Phone:** +965 2439 0000 | **Email:** info@arabiplastic.com
+**Logo URL:** <https://img1.wsimg.com/isteam/ip/c1812088-d5b4-4d7c-b39c-afa691bded3c/White%404x.png>
+**Parent:** AlKhudairi Group · Est. 1983
+**Phone:** +965 2439 0000 · **Email:** info@arabiplastic.com
+
+> This is the authoritative brief for the system as it exists today in production.
+> See `CHANGELOG.md` for what changed since the original v1 brief.
 
 ---
 
-## 1. WHAT TO BUILD
+## 1. WHAT IT IS
 
-A full-stack maintenance tracking and downtime management system for a plastic factory with 130+ machines and 109 operators. The supervisor (Viswanathan, ID: 203) needs full visibility into machine health, breakdowns, spare parts, and operator performance.
+A production-grade maintenance tracking system for Al Arabi Plastic Factory, managing **141 machines across 14 categories** and **109 operators + technicians + admin**. Supervisor Viswanathan (badge 203) has full visibility; 6 technicians handle resolution; operators log and monitor.
 
-### Tech Stack
-- **Frontend:** Next.js 14 (App Router) + Tailwind CSS + shadcn/ui
-- **Backend/DB:** Supabase (PostgreSQL + Auth + Row Level Security + Realtime)
-- **Deployment:** Vercel (web) + GitHub repo
-- **Mobile:** React Native (Expo) or PWA (Progressive Web App) — PWA recommended for MVP since the web app can be installed on phones directly
-- **Auth:** Supabase Auth with email/password (employee ID as username)
+### Tech Stack (as deployed)
 
-### Brand Colors
-- Primary Green: #0d7a3e (header, buttons, accents)
-- Header Background: #0d3320 (deep forest green)
-- Success: #16a34a
-- Error: #dc2626
-- Warning: #b45309
-- Info: #1d4ed8
-- Background: #fafaf8 (warm off-white)
-- Surface: #ffffff
-- Text: #1a1a18
-- Font: IBM Plex Sans + IBM Plex Mono (for IDs/timestamps)
+- **Frontend:** Next.js 14 (App Router) + React 18 + TypeScript 5
+- **Styling:** Tailwind CSS + shadcn/ui (Radix primitives)
+- **Database:** Supabase (PostgreSQL + Realtime + RLS)
+- **Charts:** Recharts
+- **PDF export:** jsPDF (branded reports)
+- **PWA:** Installable on phones (manifest + service worker)
+- **Deployment:** Vercel (web) + GitHub (source)
+- **Auth:** Badge ID login (no passwords — operator enters their factory badge number)
+
+### Features confirmed live in production
+
+- **Bilingual** — English + Arabic with full RTL support
+- **Dark mode** — CSS variable-based theming
+- **Realtime subscriptions** — KPI cards and sidebar badges update live via Supabase channels
+- **PDF export** — Branded report downloads
+- **CSV export** — All report tables
+
+### Brand
+
+| Element | Value |
+|---|---|
+| Primary Green | `#0d7a3e` |
+| Header Background | `#0d3320` (deep forest green) |
+| Success | `#16a34a` |
+| Error | `#dc2626` |
+| Warning | `#b45309` |
+| Info | `#1d4ed8` |
+| Background | `#fafaf8` (warm off-white) |
+| Surface | `#ffffff` |
+| Text | `#1a1a18` |
+| Font | IBM Plex Sans + IBM Plex Mono (for IDs/timestamps) |
+
+**Currency:** KWD (Kuwaiti Dinar) throughout — spare parts values, cost reporting.
 
 ---
 
-## 2. DATABASE SCHEMA (Supabase PostgreSQL)
+## 2. ROLES & ACCESS
 
-### Table: categories
+Three roles: `admin`, `technician`, `operator`. Defined in `operators.role` with `CHECK (role IN ('operator', 'admin', 'technician'))`. Access enforced via Supabase RLS policies.
+
+| Capability | Operator (90) | Technician (6) | Admin (1) |
+|---|:-:|:-:|:-:|
+| Dashboard | ✓ | ✓ | ✓ |
+| Machines (view) | ✓ | ✓ | ✓ |
+| Log new issue | ✓ | ✓ | ✓ |
+| Resolve issue | — | ✓ | ✓ |
+| Consume spare parts on an issue | — | ✓ | ✓ |
+| Assign issue to someone | — | — | ✓ |
+| Spares inventory (manage) | — | — | ✓ |
+| Reports | — | — | ✓ |
+| Operators page | — | — | ✓ |
+| Audit Log | — | — | ✓ |
+| Edit machines / add operators | — | — | ✓ |
+
+**Admin:** Viswanathan (badge `203`)
+
+**Active technicians (6):**
+
+| Badge | Name |
+|---|---|
+| 237 | EVER |
+| 493 | REY |
+| 582 | ANIL |
+| 624 JILBERT |
+| 666 | ABDULLA |
+| 671 | DOUVAN |
+
+**Operators (90 active):** All remaining badges with `role = 'operator' AND is_active = true`. See full list in `supabase/migrations/002_seed.sql`.
+
+**Inactive (12):** Technicians added by mistake and soft-deleted via `is_active = false`. They still exist in the DB for referential integrity (past issues they were assigned to), but they can't log in and don't appear in dropdowns. Do not hard-delete.
+
+---
+
+## 3. DATABASE SCHEMA (Supabase PostgreSQL)
+
+### Tables (9)
+
+#### categories
 ```sql
 CREATE TABLE categories (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
-  prefix TEXT NOT NULL UNIQUE, -- Ex, FP, CS, etc.
+  prefix TEXT NOT NULL UNIQUE,        -- Ex, FP, CS, etc.
   description TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Table: machines
+#### machines
 ```sql
 CREATE TABLE machines (
-  id TEXT PRIMARY KEY, -- Ex01, FP03, CS12, etc.
+  id TEXT PRIMARY KEY,                 -- Ex01, FP03, CS12, etc.
   name TEXT NOT NULL,
   model TEXT,
   category_id UUID REFERENCES categories(id),
   manufacturer TEXT,
-  status TEXT DEFAULT 'Running' CHECK (status IN ('Running', 'Down', 'Maintenance', 'Minor Issue')),
+  status TEXT DEFAULT 'Running'
+    CHECK (status IN ('Running', 'Down', 'Maintenance', 'Minor Issue')),
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Table: operators
+#### operators
 ```sql
 CREATE TABLE operators (
-  id TEXT PRIMARY KEY, -- Badge number: 29, 203, 482, etc.
+  id TEXT PRIMARY KEY,                 -- Factory badge number
   name TEXT NOT NULL,
-  role TEXT DEFAULT 'operator' CHECK (role IN ('operator', 'admin', 'technician')),
+  role TEXT DEFAULT 'operator'
+    CHECK (role IN ('operator', 'admin', 'technician')),
   email TEXT,
   phone TEXT,
-  is_active BOOLEAN DEFAULT true,
+  is_active BOOLEAN DEFAULT true,      -- false = soft-deleted
   created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Table: issues
+#### maintenance_categories
+Added after v1. Holds the 52 maintenance category codes used to classify issues (e.g., mechanical failure, electrical fault, PM schedule, etc.). Referenced by `issues.maintenance_category_id`.
+
+```sql
+CREATE TABLE maintenance_categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+#### issues
 ```sql
 CREATE TABLE issues (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  issue_number TEXT NOT NULL UNIQUE, -- ISS-0001, ISS-0002, auto-generated
+  issue_number TEXT NOT NULL UNIQUE,   -- ISS-0001, auto-generated
   machine_id TEXT REFERENCES machines(id) NOT NULL,
+  maintenance_category_id UUID REFERENCES maintenance_categories(id),
   type TEXT NOT NULL CHECK (type IN ('breakdown', 'minor', 'preventive')),
   description TEXT NOT NULL,
   start_time TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -93,33 +169,41 @@ CREATE TABLE issues (
       ELSE NULL
     END
   ) STORED,
-  downtime BOOLEAN DEFAULT false, -- true for breakdowns
+  downtime BOOLEAN DEFAULT false,
   reported_by TEXT REFERENCES operators(id),
   assigned_to TEXT REFERENCES operators(id),
   resolution TEXT,
-  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
+  status TEXT DEFAULT 'open'
+    CHECK (status IN ('open', 'in_progress', 'resolved')),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Table: spare_parts
+#### spare_parts  (updated schema)
 ```sql
 CREATE TABLE spare_parts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  part_number TEXT NOT NULL UNIQUE, -- SP001, SP002, etc.
-  name TEXT NOT NULL,
-  category TEXT, -- Electrical, Mechanical, Pneumatic, Sensor, Consumable
+  part_number TEXT NOT NULL UNIQUE,    -- Format: S-XX-XXX (e.g., S-10-001)
+  name TEXT NOT NULL,                  -- Short display name (≤100 chars)
+  description TEXT,                    -- Full description from source inventory
+  category TEXT,                       -- Electrical | Mechanical | Pneumatic | Sensor | Consumable
+  stock_category TEXT,                 -- Fine-grained (73 values) e.g. "Bearings", "Timing/Teeth Belts"
   quantity INTEGER DEFAULT 0,
   min_quantity INTEGER DEFAULT 0,
-  unit_cost DECIMAL(10,2) DEFAULT 0,
-  location TEXT, -- Storage location in factory
+  unit_cost DECIMAL(10,2) DEFAULT 0,   -- KWD
+  unit TEXT DEFAULT 'PIECE',           -- PIECE | MTR | SET | PACKET | CARTON | ROLL | DRUM | KG | GRM
+  location TEXT,                       -- Storage location
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE INDEX idx_spare_parts_category ON spare_parts(category);
+CREATE INDEX idx_spare_parts_stock_category ON spare_parts(stock_category);
+CREATE INDEX idx_spare_parts_part_number ON spare_parts(part_number);
 ```
 
-### Table: issue_parts (junction table)
+#### issue_parts (junction)
 ```sql
 CREATE TABLE issue_parts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -130,643 +214,239 @@ CREATE TABLE issue_parts (
 );
 ```
 
-### Table: audit_log
+#### audit_log
 ```sql
 CREATE TABLE audit_log (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   operator_id TEXT REFERENCES operators(id),
-  action TEXT NOT NULL, -- ISSUE_CREATED, ISSUE_RESOLVED, PART_USED, MACHINE_STATUS_CHANGED, etc.
-  entity_type TEXT, -- issue, machine, spare_part, operator
+  action TEXT NOT NULL,                -- ISSUE_CREATED, ISSUE_RESOLVED, PART_USED, etc.
+  entity_type TEXT,                    -- issue, machine, spare_part, operator
   entity_id TEXT,
   details JSONB,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-### Auto-update machine status trigger
-```sql
-CREATE OR REPLACE FUNCTION update_machine_status()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Update machine status based on open issues
-  UPDATE machines SET status = (
-    CASE
-      WHEN EXISTS (SELECT 1 FROM issues WHERE machine_id = NEW.machine_id AND status = 'open' AND type = 'breakdown') THEN 'Down'
-      WHEN EXISTS (SELECT 1 FROM issues WHERE machine_id = NEW.machine_id AND status = 'open' AND type = 'preventive') THEN 'Maintenance'
-      WHEN EXISTS (SELECT 1 FROM issues WHERE machine_id = NEW.machine_id AND status = 'open' AND type = 'minor') THEN 'Minor Issue'
-      ELSE 'Running'
-    END
-  ), updated_at = now()
-  WHERE id = NEW.machine_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+### Triggers (unchanged from v1)
 
-CREATE TRIGGER trigger_update_machine_status
-AFTER INSERT OR UPDATE ON issues
-FOR EACH ROW EXECUTE FUNCTION update_machine_status();
-```
+- **`update_machine_status`** — auto-derives `machines.status` from open issues on that machine (breakdown → Down, preventive → Maintenance, minor → Minor Issue, none → Running)
+- **`deduct_spare_parts`** — on insert to `issue_parts`, decrement `spare_parts.quantity` (floored at 0)
+- **`generate_issue_number`** — assigns sequential ISS-XXXX before insert
 
-### Auto-deduct spare parts trigger
-```sql
-CREATE OR REPLACE FUNCTION deduct_spare_parts()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE spare_parts
-  SET quantity = GREATEST(0, quantity - NEW.quantity_used),
-      updated_at = now()
-  WHERE id = NEW.part_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+### Row Level Security
 
-CREATE TRIGGER trigger_deduct_parts
-AFTER INSERT ON issue_parts
-FOR EACH ROW EXECUTE FUNCTION deduct_spare_parts();
-```
-
-### Auto-generate issue number
-```sql
-CREATE OR REPLACE FUNCTION generate_issue_number()
-RETURNS TRIGGER AS $$
-DECLARE
-  next_num INTEGER;
-BEGIN
-  SELECT COALESCE(MAX(CAST(SUBSTRING(issue_number FROM 5) AS INTEGER)), 0) + 1
-  INTO next_num FROM issues;
-  NEW.issue_number := 'ISS-' || LPAD(next_num::TEXT, 4, '0');
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_issue_number
-BEFORE INSERT ON issues
-FOR EACH ROW EXECUTE FUNCTION generate_issue_number();
-```
-
-### Row Level Security (RLS)
-```sql
--- Admins see everything, operators see their own issues
-ALTER TABLE issues ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins full access" ON issues
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM operators WHERE id = auth.jwt()->>'sub' AND role = 'admin')
-  );
-
-CREATE POLICY "Operators view own issues" ON issues
-  FOR SELECT USING (
-    reported_by = auth.jwt()->>'sub' OR assigned_to = auth.jwt()->>'sub'
-  );
-
-CREATE POLICY "Operators create issues" ON issues
-  FOR INSERT WITH CHECK (
-    reported_by = auth.jwt()->>'sub'
-  );
-```
+Policies enforce role-based access. Key rules:
+- **Admin** has full access to all tables.
+- **Technician** can SELECT all issues, UPDATE issues (resolve/status), INSERT issue_parts. Read-only on spare_parts, operators, audit_log.
+- **Operator** can SELECT only their own issues (reported_by OR assigned_to match), INSERT new issues with `reported_by = self`. No access to spares/reports/audit.
+- **Inactive users** (`is_active = false`) blocked at the auth layer — they cannot authenticate.
 
 ---
 
-## 3. SEED DATA — ALL MACHINES (130+)
+## 4. MACHINES — 141 UNITS ACROSS 14 CATEGORIES
 
-### Categories to seed first:
-```
-Extruder | Ex
-Flexo Printer | FP
-Bag Cutting | CS
-Roll Machine | RM
-Chiller | CH
-Air Compressor | AC
-Air Dryer | AD
-Cooling Tower | CT
-Water Cooler | WC
-Mixer | MX
-AirHydra Press | AP
-Punching Press | MP
-Slitting | SM
-Recycling | PR
-```
+Full list in `supabase/migrations/002_seed.sql`. Category breakdown:
 
-### Complete Machine List:
+| Code | Category | Count |
+|---|---|---:|
+| Ex | Extruder | 33 |
+| FP | Flexo Printer | 14 |
+| CS | Bag Cutting | 32 |
+| RM | Roll Sheet | 6 |
+| CH | Chiller | 4 |
+| AC | Air Compressor | 7 |
+| AD | Air Dryer | 4 |
+| CT | Cooling Tower | 3 |
+| WC | Water Air Cooler | 10 |
+| MX | Material Mixer | 11 |
+| AP | AirHydra Press | 4 |
+| MP | Punching Press | 10 |
+| SM | Slitting | 2 |
+| PR | Recycling | 1 |
 
-#### EXTRUDERS (33 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| Ex01 | Lung Meng Blow Film Extruder | LM65 | Lung Meng |
-| Ex02 | Italwork Blow Film Extruder | KE 55 | Italwork S.A.S. |
-| Ex03 | Ye I Machinery Blow Film Extruder | HSE 80 | Ye I Machinery |
-| Ex04 | Cherng Horng Blow Film Extruder | HPE 65 S | Cherng Horng |
-| Ex05 | Lung Meng Blow Film Extruder | LM/AH65T | Lung Meng |
-| Ex06 | Zam Zam Blow Film Extruder | THD 55 | Zam Zam |
-| Ex07 | Cherng Horng Blow Film Extruder (Converted) | HL 55 → 65 | Cherng Horng |
-| Ex08 | ItalWork Blow Film Extruder | KG 75 | ItalWork |
-| Ex11 | Cherng Horng Blow Film Extruder | HL 65S | Cherng Horng |
-| Ex12 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex13 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex14 | Lung Meng PP Blow Film Extruder | IC 50 A LM AP 55 | Lung Meng |
-| Ex15 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex16 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex17 | TECOM Rotary Blow Film Extruder | MB50B.1100 | TECOM SRL |
-| Ex18 | QueenPlas Blow Film Extruder | QN 55 800 | QueenPlas |
-| Ex19 | QueenPlas Blow Film Extruder | QN 55 800 | QueenPlas |
-| Ex20 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex21 | QueenPlas Blow Film Extruder | QN 55 800 | QueenPlas |
-| Ex22 | QueenPlas Blow Film Extruder | QN 55 800 | QueenPlas |
-| Ex24 | Cherng Horng Extruder + 2C Flexo | Mini 50 A | Cherng Horng |
-| Ex25 | Cherng Horng Extruder + 2C Flexo | Mini 50 A | Cherng Horng |
-| Ex26 | Cherng Horng Extruder + 4C Flexo | ABA 5555 SA | Cherng Horng |
-| Ex27 | Cherng Horng Extruder + 4C Flexo | ABA 5555 SA (A/HL) | Cherng Horng |
-| Ex28 | Cherng Horng Extruder + 4C Flexo | ABA 5555 SA | Cherng Horng |
-| Ex29 | Cherng Horng Extruder + 4C Flexo | ABA 5555 SA (A/HL) | Cherng Horng |
-| Ex30 | Cherng Horng Blow Film Extruder | ABA 6565A | Cherng Horng |
-| Ex31 | Lung Meng Blow Film Extruder | LM-AH75T | Lung Meng |
-| Ex32 | Cherng Horng Blow Film Extruder | Mini 50 A | Cherng Horng |
-| Ex33 | Lung Meng Blow Film Extruder | LM-AH65SC | Lung Meng |
-| Ex34 | Lung Meng Blow Film Extruder | LM/AH65T | Lung Meng |
-| Ex35 | Lung Meng PP2 Blow Film Extruder | LM AP65 | Lung Meng |
-| Ex36 | Extruder 36 (Reserved) | TBD | TBD |
-
-#### RECYCLING (1 machine)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| PR02 | Ye I Machinery Recycling Machine | YDN-U-105G-1 | Ye I Machinery |
-
-#### FLEXO PRINTERS (14 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| FP01 | Derthona 4-Color Flexo Printer | 60/70 Serie: 4AZ | Derthona |
-| FP02 | Italwork 6-Color Flexo Printer | 6AZ-MAT | Italwork S.A.S. |
-| FP03 | Cherng Horng 4-Color Flexo Printer | HJ-4001 XL | Cherng Horng |
-| FP04 | Flexo Printer 04 (Reserved) | TBD | TBD |
-| FP05 | Cherng Horng 4-Color Flexo Printer | CH-H5 4001M (FKFS 40"x4) | Cherng Horng |
-| FP06 | Hemingstone 4-Color Flexo Printer | HM 1004FP-0D-AA | Hemingstone |
-| FP07 | Hemingstone 6-Color Flexo Printer | HM 1206FP-0D | Hemingstone |
-| FP08 | Hemingstone 4-Color Flexo Printer | HM-1004FP-2E-0R | Hemingstone |
-| FP09 | Hemingstone 4-Color Flexo Printer | HM-1004FP-2E-0R | Hemingstone |
-| FP10 | Cherng Horng 2-Color Flexo [inline Ex25] | CH-2004S (M) | Cherng Horng |
-| FP11 | Cherng Horng 2-Color Flexo [inline Ex24] | CH-2004S (M) | Cherng Horng |
-| FP12 | Cherng Horng 2-Color Flexo [inline Ex26] | CH-2004M | Cherng Horng |
-| FP13 | Cherng Horng 4-Color Flexo [inline Ex28] | CH-4004M | Cherng Horng |
-| FP14 | Cherng Horng 4-Color Flexo [inline Ex29] | HJ-2004M | Cherng Horng |
-
-#### BAG CUTTING MACHINES (32 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| CS02 | ELBA Bag Making Machine | ES-1000M | ELBA |
-| CS10 | HYMAC Bag Making Machine | HSS34NAUSR | Hong Yueng (HYMAC) |
-| CS12 | HYMAC Bag Making Machine | HSS34NAUSR | Hong Yueng (HYMAC) |
-| CS13 | Lung Meng Bag Making Machine | ASTP-800C | Lung Meng |
-| CS14 | Bag Cutting 14 (Reserved) | TBD | TBD |
-| CS15 | Viara Bag Making Machine | PUPA | Viara srl |
-| CS16 | Viara Bag Making Machine | PUPA | Viara srl |
-| CS17 | Lung Meng Bag Making Machine | ASTP-800C | Lung Meng |
-| CS18 | Hemingstone Bag Making Machine | HM1000DT | Hemingstone |
-| CS19 | Hemingstone Bag Making Machine | HM810VL-SV | Hemingstone |
-| CS21 | Lung Meng Bag Making Machine | ASTP 1000C | Lung Meng |
-| CS23 | Mamata Bag Making Machine | VEGA 1200 SPLIT | Mamata |
-| CS24 | Lung Meng Bag Making Machine | ASTP1200C | Lung Meng |
-| CS25 | Lung Meng Bag Making Machine | ASTP-800 | Lung Meng |
-| CS26 | Avita Cutting Bag Making Machine | AV-B-360 TP-ST2 | Avita |
-| CS27 | Hemingstone Bag Making Machine | HM 810B-SV | Hemingstone |
-| CS28 | Hemingstone Bag Making Machine | HM-14000 VA SV | Hemingstone |
-| CS29 | Hemingstone Bag Making Machine | HM 1200FB | Hemingstone |
-| CS30 | Hemingstone Bag Making Machine | HM-800W+CK | Hemingstone |
-| CS31 | Cosmo Bag Making Machine | SA-28 | Cosmo |
-| CS32 | Hemingstone Bag Making Machine | HM-1000FB | Hemingstone |
-| CS33 | ELBA Bag Making Machine | ESM100 | ELBA |
-| CS34 | Hemingstone Bag Making Machine | HM-810SFP-SV | Hemingstone |
-| CS35 | Hemingstone Loop Handle Machine | HM 500JF | Hemingstone |
-| CS36 | Cosmo Bag Making Machine | SCB-800-L2 | Cosmo |
-| CS37 | JIN CHANG Gloves Making Machine | JCGP 40 | JIN CHANG |
-
-#### CHILLERS (4 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| CH01 | Water Chiller #1 (PP Chiller) | — | — |
-| CH02 | Water Chiller #2 (PP Chiller) | — | — |
-| CH03 | Euro Chiller (Air Cooler Ex17) | ABFPWH020 | Euro Chiller |
-| CH04 | Water Chiller #4 | FSC-20W | — |
-
-#### AIR COMPRESSORS (7 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| AC05 | ALUP Screw Air Compressor | SCK 26-08TR | ALUP |
-| AC06 | Aydin Trafo Screw Air Compressor | AVT-37 | Aydin Trafo |
-| AC07 | Aydin Trafo Screw Air Compressor | AVT-37 | Aydin Trafo |
-| AC08 | Aydin Trafo Screw Air Compressor | AVT-37 | Aydin Trafo |
-| AC09 | Aydin Trafo Screw Air Compressor | AVT-37 | Aydin Trafo |
-| AC10 | Aydin Trafo Screw Air Compressor (Direct Drive) | ATV-A-30 | Aydin Trafo |
-| AC11 | Aydin Trafo Screw Air Compressor (Direct Drive) | ATV-A-30 | Aydin Trafo |
-
-#### AIR DRYERS (4 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| AD01 | Ingersoll Rand Ref. Air Dryer | D240IN-A | Ingersoll Rand |
-| AD02 | Ingersoll Rand Ref. Air Dryer | D260IN-A | Ingersoll Rand |
-| AD03 | Ingersoll Rand Ref. Air Dryer | D260IN-A | Ingersoll Rand |
-| AD04 | Aydin Trafo Air Dryer | TMP-HKP 2220 | Aydin Trafo |
-
-#### ROLL SHEET MACHINES (6 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| RM01 | Zam Zam Roll Sheet Machine | FTAHI 40*60 | Zam Zam |
-| RM03 | Lung Meng Roll Sheet Machine | TX 800 | Lung Meng |
-| RM04 | Hemingstone Roll Sheet Machine | HM 1000MR+C2 | Hemingstone |
-| RM05 | Lung Meng Roll Sheet Machine | TAA-1500BD | Lung Meng |
-| RM06 | Cosmo Roll Sheet Machine | SBCR-800-OB+J | Cosmo |
-| RM07 | Cosmo Roll Sheet Machine | SMNR/CR-1000+DS+L | Cosmo |
-
-#### SLITTING MACHINES (2 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| SM01 | Slitting Machine 800mm | 800mm | — |
-| SM02 | Slitting Machine 1400mm | 1400mm | — |
-
-#### COOLING TOWERS (3 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| CT01 | Cooling Tower (Extruders/Chillers) | LBC-125 | — |
-| CT02 | Cooling Tower (Plastic Recycling) | LBC-125 | — |
-| CT03 | Cooling Tower 3 | — | — |
-
-#### WATER AIR COOLERS (10 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| WC01–WC10 | Water Air Cooler #1 through #10 | — | — |
-
-#### MATERIAL MIXERS (11 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| MX01–MX06 | Material Mixer #1 through #6 | — | — |
-| MX07 | Material Mixer #7 | LSH-500-500KG | — |
-| MX08 | Material Mixer #8 | LSH-500-500KG | — |
-| MX09 | Material Mixer #9 | LSH-500-500KG | — |
-| MX10 | Material Mixer #10 | — | — |
-| MX11 | Material Mixer #11 | LSH-500-500KG | — |
-
-#### AIRHYDRA PRESS (4 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| AP01 | Hemingstone AirHydra Press | 5-C-SC-55 | Hemingstone |
-| AP02 | Hemingstone AirHydra Press | 5-C-SC-55 | Hemingstone |
-| AP03 | Hemingstone AirHydra Press | A005-AP-A1-1 | Hemingstone |
-| AP04 | Hemingstone AirHydra Press | 5-C-SC-55 | Hemingstone |
-
-#### MECHANICAL PUNCHING PRESS (10 machines)
-| ID | Name | Model | Manufacturer |
-|-----|------|-------|-------------|
-| MP01 | ELBA Mechanical Punching Press | 8 ton | ELBA S.p.a. |
-| MP02 | CGM/FUSTEL Mechanical Punching Press | 10D-Plast/74 | CGM/FUSTEL |
-| MP03–MP10 | CGM/FUSTEL Mechanical Punching Press | Plast/74 | CGM/FUSTEL |
+Total: **141** (v1 brief said 130+; actual production count is 141).
 
 ---
 
-## 4. ALL OPERATORS (109)
+## 5. SPARE PARTS — 2,837 REAL PARTS
 
-| ID | Name | Role |
-|----|------|------|
-| 109 | OPERATOR 109 | operator |
-| 29 | HARIBABU | operator |
-| 75 | UMAPAD | operator |
-| 91 | SANJEEVA | operator |
-| 103 | REFIQUL | operator |
-| 120 | FAYZUL HAQ | operator |
-| 129 | V. FAZULMUSLAND | operator |
-| 131 | VISHNU | operator |
-| 138 | HABIB | operator |
-| 155 | SUNIMAL | operator |
-| 164 | AHMED ALI | operator |
-| 172 | TAHA | operator |
-| 177 | SAMAD | operator |
-| 182 | UMMER | operator |
-| 185 | ALI EZZAT | operator |
-| 201 | PUGAZANTHI | operator |
-| **203** | **VISWANATHAN** | **admin** |
-| 205 | WINROY | operator |
-| 220 | MOH HASSAN | operator |
-| 224 | M.NOURELDIN | operator |
-| 225 | SELVEN | operator |
-| 228 | SUJITH | operator |
-| 229 | SRENVAS | operator |
-| 231 | ABU BAKER | operator |
-| 328 | KARTHIK | operator |
-| 354 | NUWAN | operator |
-| 357 | GANESH YAEV | operator |
-| 361 | DANTY | operator |
-| 362 | JEFREN | operator |
-| 374 | MANI KUMAR | operator |
-| 381 | RANUKA | operator |
-| 432 | KAMRAN | operator |
-| 435 | JAMIL | operator |
-| 440 | DHARMENDRA | operator |
-| 450 | MAHMOOD | operator |
-| 451 | MASOUD | operator |
-| 452 | RABIAH | operator |
-| 459 | KHALED | operator |
-| 462 | AHMED | operator |
-| 477 | AHMED HAMED | operator |
-| 478 | RAJITH | operator |
-| 479 | ASHNUL | operator |
-| 480 | DAYAN | operator |
-| 481 | AMEER | operator |
-| 482 | KABIR | operator |
-| 483 | SANDEEP | operator |
-| 484 | ANSARI | operator |
-| 486 | MAH FATHI | operator |
-| 487 | AHMED FAWZY | operator |
-| 495 | ROMEL | operator |
-| 499 | ALAN | operator |
-| 501 | LASANTHA | operator |
-| 502 | ERIC | operator |
-| 520 | OMER ALI | operator |
-| 521 | GAD ESSA | operator |
-| 522 | FERNANDO | operator |
-| 524 | ANTONIO | operator |
-| 531 | SHERWIN | operator |
-| 540 | ANGELO | operator |
-| 555 | MD. JAKARIA | operator |
-| 563 | SHIHABUDIN | operator |
-| 568 | MADO | operator |
-| 574 | EMAD | operator |
-| 581 | EKHLAKH KHAN | operator |
-| 591 | MUJEEB | operator |
-| 592 | FURKAN | operator |
-| 593 | ABU BAKER | operator |
-| 594 | SHADAB | operator |
-| 595 | PARVEZ ALI | operator |
-| 597 | TAHER | operator |
-| 598 | ARIF | operator |
-| 599 | AFTAB | operator |
-| 606 | MD.AKHTAR | operator |
-| 607 | FLELCIANO | operator |
-| 613 | NABIL | operator |
-| 617 | MOH ASIM | operator |
-| 618 | SHAHBAZ AHMED | operator |
-| 621 | ALAN | operator |
-| 627 | MAHOOD ALI | operator |
-| 628 | V.V YAGHRI | operator |
-| 629 | KANISHKA | operator |
-| 630 | BRINDRESH | operator |
-| 631 | PRIYANTHA | operator |
-| 633 | WAEL | operator |
-| 634 | BADAWI | operator |
-| 638 | MOHSEN | operator |
-| 641 | GEMY | operator |
-| 642 | AASEELA | operator |
-| 644 | INDUNIL | operator |
-| 645 | THARAKA | operator |
-| 646 | JULIUS | operator |
-| 649 | ESMAIL | operator |
-| 651 | ADEL | operator |
-| 654 | FABIL | operator |
-| 655 | WADENA | operator |
-| 657 | SRIKANTHAN | operator |
-| 658 | SHANTHA KUMAR | operator |
-| 664 | REYNALDO | operator |
-| 665 | MARCELO | operator |
-| 672 | NEERAJ | operator |
-| 901 | SAMIRULSK | operator |
-| 902 | ABDULALIM | operator |
-| 693 | JUNIL | operator |
-| 688 | HARMON | operator |
-| 689 | BRAYAN | operator |
-| 690 | REMEGIO | operator |
-| 692 | RENATO | operator |
-| 687 | TRESTO | operator |
-| 683 | THANGADUR | operator |
-| 682 | BARKHA | operator |
+Imported from `Spare_parts.xls` via migration `003_spare_parts_real.sql` (replaced the 15 seed parts).
 
----
+### Inventory summary
 
-## 5. STARTER SPARE PARTS
+| Metric | Value |
+|---|---:|
+| Total SKUs | 2,837 |
+| In stock | 1,635 |
+| Out of stock | 1,202 |
+| Total items on hand | 13,545 |
+| Total inventory value | **163,795 KWD** |
 
-| Part # | Name | Category | Initial Qty | Min Qty | Unit Cost |
-|--------|------|----------|------------|---------|-----------|
-| SP001 | Heating Element | Electrical | 24 | 5 | $45 |
-| SP002 | Drive Belt V-Type | Mechanical | 38 | 10 | $12 |
-| SP003 | Bearing 6205-2RS | Mechanical | 50 | 15 | $8 |
-| SP004 | Fuse 30A | Electrical | 100 | 20 | $2 |
-| SP005 | Contactor 40A | Electrical | 12 | 3 | $35 |
-| SP006 | Thermocouple K-Type | Sensor | 18 | 5 | $25 |
-| SP007 | Pneumatic Cylinder | Pneumatic | 8 | 2 | $120 |
-| SP008 | Solenoid Valve | Pneumatic | 15 | 4 | $65 |
-| SP009 | Ink Cartridge (Flexo) | Consumable | 30 | 8 | $85 |
-| SP010 | Sealing Blade | Mechanical | 22 | 6 | $55 |
-| SP011 | Motor Capacitor 50μF | Electrical | 10 | 3 | $18 |
-| SP012 | Oil Filter | Mechanical | 20 | 5 | $15 |
-| SP013 | Proximity Sensor | Sensor | 14 | 4 | $30 |
-| SP014 | Gear Coupling | Mechanical | 6 | 2 | $95 |
-| SP015 | Cooling Fan 220V | Electrical | 16 | 4 | $22 |
+### Category distribution
+
+| Category | SKUs | Items |
+|---|---:|---:|
+| Mechanical | 1,674 | 7,720 |
+| Electrical | 743 | 2,689 |
+| Sensor | 191 | 1,137 |
+| Pneumatic | 137 | 1,754 |
+| Consumable | 92 | 245 |
+
+### Part-number format
+
+All parts use `S-XX-XXX` where `XX` = 2-digit category prefix, `XXX` = sequence within category. Example: `S-10-001` = BEARING 608ZN.
+
+**73 stock categories** (fine-grained). Map stored as `stock_category` TEXT column. Examples:
+- `S-10-*` → Bearings (837 parts)
+- `S-45-*` → Timing/Teeth Belts (124 parts)
+- `S-50-*` → Surgical Blades & Strips (92 parts, all Consumable)
+- `S-76-*` → Punching Molds & Air Cylinders (75 parts, Pneumatic)
+
+Full 73-category map in `README_spare_parts_migration.md`.
+
+### Known data-quality issues (from source Excel)
+
+1. **One duplicate code** — `S-81 335` appears twice in source (COOLING FAN and OIL SEAL). Imported as `S-81-335` and `S-81-335-ALT1`. Admin to resolve in UI.
+2. **9 rows with synthetic names** — `S-82-009` through `S-82-018` had blank descriptions. Given placeholder names like `Air Dryer Filter Elements (S-82-009)`. Admin to fill in real descriptions.
+3. **1,202 parts with `unit_cost = 0`** — parts currently out of stock have no derivable unit cost. Admin to fill in as restock prices become known.
 
 ---
 
 ## 6. UI SCREENS
 
-### Admin Screens (Viswanathan — ID 203)
-1. **Login** — Employee ID input, company branding
-2. **Dashboard** — KPI cards (running/down/maintenance/minor), category health bars, open issues list, low stock alerts
-3. **Machines** — Searchable table with category filter, click to see detail panel with issue history
-4. **Issues** — All issues with status filter (open/in_progress/resolved), create new, resolve existing
-5. **Spare Parts** — Inventory table with stock status (OK/LOW/CRITICAL), add new parts, usage history
-6. **Reports** — Period selector (daily/weekly/monthly/quarterly/yearly), machine downtime ranking, operator performance, issue type distribution, spare parts usage
-7. **Operators** — Searchable grid, resolved/open counts per operator
-8. **Audit Log** — Chronological action history
+### Admin screens (badge 203 — Viswanathan)
 
-### Operator Screens
-1. **Login** — Same login screen
-2. **Dashboard** — Personal KPI view
-3. **My Issues** — Assigned + reported issues, ability to resolve
-4. **Machines** — Read-only machine list, can log new issues
+1. **Login** — Badge ID input, branded header
+2. **Dashboard** — 6 live KPI cards (Running / Down / Maintenance / Minor / Open issues / Downtime), category health bars, top 10 open issues, low-stock alerts. Updates via Supabase Realtime.
+3. **Machines** — Searchable list of 141, detail panel with full issue history, quick "Log Issue" button
+4. **Issues** — Full CRUD with filters (status, type, machine, date range, maintenance category, severity)
+5. **Spares** — 2,837 parts inventory. Filters: category (5), stock_category (73), stock status (OK/LOW/CRITICAL/OUT). Search across part_number, name, description. Paginated 50/page.
+6. **Reports** — Period selector (daily/weekly/monthly/quarterly/yearly), downtime ranking, operator performance, issue type distribution, spare parts usage. CSV + branded PDF export.
+7. **Operators** — Grid view, issue stats per operator, role badges
+8. **Audit Log** — Chronological action history with JSONB details
 
-### Mobile (PWA or React Native)
-- Same screens, responsive layout
-- Quick issue logging with camera for photos (future)
-- Push notifications for assigned issues (future)
+### Technician screens (6 active badges)
 
----
+1. **Login, Dashboard, Machines** — same as operator
+2. **Issues** — see all open issues, can assign to self, can resolve
+3. **Resolve issue** — add resolution text, mark parts consumed (triggers auto-deduction)
+4. **My Issues** — active work queue
 
-## 7. API ENDPOINTS (Supabase auto-generates REST, but for reference)
+### Operator screens (90 active badges)
 
-```
-Auth:
-POST   /auth/login                    — Login with employee ID
-POST   /auth/logout                   — Logout
+1. **Login, Dashboard** — personal KPI view
+2. **Machines** — read-only, can open "Log Issue" form
+3. **My Issues** — issues they reported or were assigned; cannot resolve (technician does that)
 
-Machines:
-GET    /machines                      — List all (with filters: category, status)
-GET    /machines/:id                  — Machine detail with issue history
-PATCH  /machines/:id                  — Update machine (admin only)
-POST   /machines                      — Add machine (admin only)
+### Mobile (PWA)
 
-Issues:
-GET    /issues                        — List all (filters: status, type, machine_id, date range)
-GET    /issues/:id                    — Issue detail
-POST   /issues                        — Create issue
-PATCH  /issues/:id                    — Update issue (resolve, assign, etc.)
-GET    /issues/my                     — Current user's issues
+All screens responsive. Installable via browser "Add to home screen." Works on factory floor mobile browsers.
 
-Spare Parts:
-GET    /spare-parts                   — List inventory
-POST   /spare-parts                   — Add part (admin only)
-PATCH  /spare-parts/:id              — Update qty/details (admin only)
+### Bilingual / RTL
 
-Reports:
-GET    /reports/downtime              — Machine downtime report (period filter)
-GET    /reports/operator-performance  — Operator stats (period filter)
-GET    /reports/spare-parts-usage     — Parts usage report (period filter)
-GET    /reports/summary               — Dashboard KPIs
+Full English + Arabic. Language toggle in header. RTL layout flips sidebar, tables, forms. Font remains IBM Plex for English, appropriate Arabic fallback (Noto Sans Arabic or system).
 
-Operators:
-GET    /operators                     — List all
-POST   /operators                     — Add operator (admin only)
-PATCH  /operators/:id                — Update operator (admin only)
+### Dark mode
 
-Audit:
-GET    /audit-log                     — List audit entries (admin only)
-```
+CSS variable-based theming. Toggle in header. Persists per-user via localStorage.
 
 ---
 
-## 8. DEPLOYMENT STEPS
+## 7. BUSINESS RULES
 
-### Step 1: GitHub Repo
-- Create repo: `alarabi-maintenance-tracker`
-- Push all code
-
-### Step 2: Supabase Setup
-- Create project on Supabase
-- Run all SQL migrations (tables, triggers, RLS)
-- Run seed data (machines, operators, spare parts)
-- Get project URL and anon key
-
-### Step 3: Vercel Deployment
-- Connect GitHub repo to Vercel
-- Set environment variables:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Deploy
-
-### Step 4: PWA / Mobile
-- Add PWA manifest.json and service worker to Next.js
-- This makes the web app installable on phones
-- Add to home screen = acts like native app
+1. **Multiple open issues per machine allowed** — e.g., a minor issue can coexist with a breakdown.
+2. **Machine status auto-derived** from open issues (breakdown → Down, preventive → Maintenance, minor → Minor Issue, none → Running).
+3. **Spare parts auto-deduct** when issue_parts rows inserted.
+4. **Every action audit-logged** with JSONB `details` payload (old/new values for updates, linked entities for creates).
+5. **Downtime auto-calculated** as `end_time - start_time`, stored as `duration_minutes`.
+6. **Issue numbers auto-generated** (ISS-0001, ISS-0002, …).
+7. **Operators see only their own issues** (RLS enforced).
+8. **Admin has full access** including export.
+9. **Technicians can resolve any issue** but not manage inventory/operators.
+10. **Inactive accounts cannot log in** and don't appear in dropdowns — but historical FK references to them are preserved.
 
 ---
 
-## 9. FOLDER STRUCTURE
+## 8. FOLDER STRUCTURE (actual)
 
 ```
-alarabi-maintenance-tracker/
+alarabi/
 ├── app/
-│   ├── layout.tsx                 — Root layout with header/footer
-│   ├── page.tsx                   — Login page
-│   ├── dashboard/
-│   │   └── page.tsx               — Main dashboard
-│   ├── machines/
-│   │   ├── page.tsx               — Machine list
-│   │   └── [id]/page.tsx          — Machine detail
-│   ├── issues/
-│   │   ├── page.tsx               — All issues
-│   │   ├── new/page.tsx           — Create issue form
-│   │   └── [id]/page.tsx          — Issue detail
-│   ├── spares/
-│   │   └── page.tsx               — Spare parts inventory
-│   ├── reports/
-│   │   └── page.tsx               — Reports & analytics
-│   ├── operators/
-│   │   └── page.tsx               — Operator list
-│   └── audit/
-│       └── page.tsx               — Audit log
+│   ├── layout.tsx
+│   ├── page.tsx                       — Login
+│   ├── dashboard/page.tsx
+│   ├── machines/page.tsx  [id]/page.tsx
+│   ├── issues/page.tsx  new/page.tsx  [id]/page.tsx
+│   ├── spares/page.tsx
+│   ├── reports/page.tsx
+│   ├── operators/page.tsx
+│   └── audit/page.tsx
 ├── components/
-│   ├── ui/                        — shadcn/ui components
-│   ├── layout/
-│   │   ├── Header.tsx             — Company branded header
-│   │   ├── Sidebar.tsx            — Navigation sidebar
-│   │   └── Footer.tsx             — Company branded footer
-│   ├── dashboard/
-│   │   ├── KpiCards.tsx
-│   │   ├── CategoryHealth.tsx
-│   │   └── OpenIssues.tsx
-│   ├── machines/
-│   │   ├── MachineTable.tsx
-│   │   └── MachineDetail.tsx
-│   ├── issues/
-│   │   ├── IssueCard.tsx
-│   │   ├── IssueForm.tsx
-│   │   └── ResolveDialog.tsx
-│   └── reports/
-│       ├── DowntimeChart.tsx
-│       └── OperatorPerformance.tsx
+│   ├── ui/                            — shadcn/ui primitives
+│   ├── layout/                        — Header, Sidebar, Footer
+│   ├── dashboard/                     — KpiCards, CategoryHealth, OpenIssues
+│   ├── machines/                      — MachineTable, MachineDetail
+│   ├── issues/                        — IssueCard, IssueForm, ResolveDialog
+│   └── reports/                       — DowntimeChart, OperatorPerformance
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts              — Supabase client init
-│   │   ├── auth.ts                — Auth helpers
-│   │   └── queries.ts             — Database queries
-│   ├── types.ts                   — TypeScript types
-│   └── utils.ts                   — Utility functions
-├── supabase/
-│   ├── migrations/
-│   │   ├── 001_create_tables.sql
-│   │   ├── 002_create_triggers.sql
-│   │   ├── 003_create_rls.sql
-│   │   └── 004_seed_data.sql
-│   └── config.toml
+│   ├── supabase/                      — client.ts, auth.ts, queries.ts
+│   ├── i18n/                          — en.json, ar.json, provider
+│   ├── theme/                         — dark mode provider
+│   ├── types.ts
+│   └── utils.ts
+├── types/                             — generated Supabase types
+├── supabase/migrations/
+│   ├── 001_schema.sql
+│   ├── 002_seed.sql
+│   ├── 003_spare_parts_real.sql       — 2,837 parts (replaces seed)
+│   ├── 00X_maintenance_categories.sql — 52 maintenance codes
+│   └── 00X_technician_role.sql        — 6 active technicians
 ├── public/
-│   ├── manifest.json              — PWA manifest
-│   ├── sw.js                      — Service worker
-│   └── icons/                     — App icons
-├── .env.local                     — Supabase keys (gitignored)
+│   ├── manifest.json                  — PWA manifest
+│   ├── sw.js                          — service worker
+│   └── icons/
+├── PROJECT_BRIEF.md                   — this file
+├── CHANGELOG.md
+├── CLAUDE_CODE_PROMPT.md
+├── README.md
 ├── next.config.js
 ├── tailwind.config.ts
-├── tsconfig.json
-├── package.json
-└── README.md
+└── package.json
 ```
 
 ---
 
-## 10. IMPORTANT BUSINESS RULES
+## 9. DEPLOYMENT
 
-1. **Multiple issues per machine allowed** — a machine can have overlapping breakdown + minor issues
-2. **Machine status auto-derived** — from open issues (breakdown=Down, preventive=Maintenance, minor=Minor Issue, none=Running)
-3. **Spare parts auto-deduct** — when issue is created with parts, inventory decreases automatically
-4. **Every action audit logged** — issue create/resolve, part used, machine status change
-5. **Downtime auto-calculated** — end_time minus start_time, stored as duration_minutes
-6. **Issue numbers auto-generated** — ISS-0001, ISS-0002, sequential
-7. **Operators cannot see other operators' issues** — only admin sees all (RLS enforced)
-8. **Admin (ID: 203) has full access** — all screens, all data, export capability
+Production on Vercel, DB on Supabase. Env vars:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Free-tier Supabase (500 MB limit, currently well under).
 
 ---
 
-## 11. FUTURE EXPANSION (design for but don't build yet)
+## 10. FUTURE (NOT BUILT)
 
-- IoT machine integration (sensor data ingestion)
-- Auto fault detection (ML on historical patterns)
+- IoT sensor integration for auto fault detection
 - Photo attachments on issues
-- Push notifications for operators
+- Push notifications for assigned issues
 - Shift management (morning/evening/night)
 - Production output tracking per machine
 - Maintenance scheduling calendar
 - QR code scanning for machine identification
-- Multi-language support (English + Arabic)
-- Export reports to Excel/PDF
+- Export reports to Excel (PDF + CSV already done)
 
 ---
 
-## 12. CLAUDE CODE INSTRUCTIONS
+## 11. INSTRUCTIONS FOR CLAUDE CODE
 
-Open Claude Code in terminal and give it this file as context:
+When making changes:
 
-```bash
-claude
-> Read the file PROJECT_BRIEF.md and build the complete application. 
-> Use my existing Supabase project, my GitHub repo, and deploy to Vercel.
-> Start with database migrations, then build the Next.js frontend.
-```
-
-You'll need to provide Claude Code with:
-1. Your Supabase project URL and anon key
-2. Your GitHub repo URL
-3. Your Vercel account connection
-
-Claude Code will handle the rest — creating files, running migrations, pushing to Git, and deploying.
+1. **Read this file first** — it's authoritative. The old v1 brief had many inaccuracies (130 machines, 15 parts, 2 roles, no bilingual, etc.). Do not use old Claude Code summaries as source of truth.
+2. **Database is the source of truth for data** — if you need to know what's really there (operator count, spare part count, machine categories), query Supabase directly rather than assuming from any doc.
+3. **Never hard-delete** — set `is_active = false` or equivalent soft-delete. Preserves audit trail and FKs.
+4. **Currency is KWD**, not USD.
+5. **Respect RLS** — never bypass in app code; if you need admin-only access, verify the logged-in operator's role first.
+6. **Part numbers are `S-XX-XXX`**, NOT `SPXXX`. The SP format was seed data only.
+7. **Inactive operators** (the 12 mis-added technicians) stay in the DB. Don't write migrations to delete them.
