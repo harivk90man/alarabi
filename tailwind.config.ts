@@ -92,11 +92,23 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.4" },
         },
+        "pulse-breathe": {
+          "0%, 100%": { opacity: "0.4", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.15)" },
+        },
+        "attention": {
+          "0%": { transform: "scale(1)" },
+          "30%": { transform: "scale(1.08)" },
+          "60%": { transform: "scale(0.98)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "pulse-breathe": "pulse-breathe 2s ease-in-out infinite",
+        "attention": "attention 0.6s ease-out",
       },
     },
   },

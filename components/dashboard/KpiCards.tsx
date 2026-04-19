@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Cpu, AlertTriangle, Wrench, AlertCircle, Activity, Clock } from 'lucide-react'
 import { formatDuration } from '@/lib/format'
+import { LivePulseDot } from '@/components/ui/LivePulseDot'
 
 interface KpiData {
   running: number
@@ -67,6 +68,7 @@ export function KpiCards() {
       color: '#16a34a',
       bg: '#f0fdf4',
       border: '#86efac',
+      live: true,
     },
     {
       label: 'Down',
@@ -76,6 +78,7 @@ export function KpiCards() {
       bg: '#fef2f2',
       border: '#fca5a5',
       pulse: true,
+      live: true,
     },
     {
       label: 'Maintenance',
@@ -84,6 +87,7 @@ export function KpiCards() {
       color: '#b45309',
       bg: '#fffbeb',
       border: '#fcd34d',
+      live: true,
     },
     {
       label: 'Minor Issues',
@@ -92,6 +96,7 @@ export function KpiCards() {
       color: '#1d4ed8',
       bg: '#eff6ff',
       border: '#93c5fd',
+      live: true,
     },
     {
       label: 'Open Issues',
@@ -100,6 +105,7 @@ export function KpiCards() {
       color: '#7c3aed',
       bg: '#f5f3ff',
       border: '#c4b5fd',
+      live: true,
     },
     {
       label: 'Downtime 7d',
@@ -124,7 +130,7 @@ export function KpiCards() {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      {cards.map(({ label, value, icon: Icon, color, bg, border, pulse, isText }) => (
+      {cards.map(({ label, value, icon: Icon, color, bg, border, pulse, isText, live }: any) => (
         <div
           key={label}
           className="rounded-lg border p-4 flex flex-col gap-2"
@@ -139,11 +145,14 @@ export function KpiCards() {
               <Icon className="w-3.5 h-3.5" style={{ color }} />
             </div>
           </div>
-          <div
-            className={`font-bold ${isText ? 'text-lg' : 'text-3xl'}`}
-            style={{ color }}
-          >
-            {value}
+          <div className="flex items-center">
+            <span
+              className={`font-bold ${isText ? 'text-lg' : 'text-3xl'}`}
+              style={{ color }}
+            >
+              {value}
+            </span>
+            {live && <LivePulseDot />}
           </div>
         </div>
       ))}

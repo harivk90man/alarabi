@@ -11,6 +11,12 @@
 - Brand colors (header, sidebar, buttons, focus rings) now use CSS variables that respond to accent selection
 - Semantic colors (success/error/warning/info) independent of accent — Running badges always green
 
+### v2.3 — Login redesign + motion primitives (April 2026)
+
+- Redesigned login page: animated factory silhouette illustration, two-column layout (illustration + card)
+- Added 4 subtle motion primitives: live pulse, status flick, nav slide-in, page fade-up
+- Motion respects prefers-reduced-motion
+
 This version reflects what's actually in production as of April 2026. The v1 brief was the initial spec; many things evolved during development that were never fed back into the doc.
 
 ### Added (real, live in production)

@@ -188,3 +188,28 @@
     scrollbar-color: #64748b #f0f0f0;
   }
 }
+
+/* Sidebar active indicator slide-in */
+@keyframes slide-in-y {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+.nav-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--brand-accent);
+  animation: slide-in-y 0.25s ease-out;
+  transform-origin: center;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

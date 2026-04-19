@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { Footer } from './Footer'
+import { PageTransition } from './PageTransition'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -44,7 +45,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto min-w-0">
           <div className="p-4 md:p-6">
-            {children}
+            <PageTransition key={pathname}>
+              {children}
+            </PageTransition>
           </div>
         </main>
       </div>

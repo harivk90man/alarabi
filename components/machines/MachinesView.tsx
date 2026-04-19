@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,20 @@ const statusConfig: Record<string, { dot: string; badge: string; variant: 'defau
   'Down': { dot: 'bg-[#dc2626] animate-pulse', badge: 'Down', variant: 'destructive' },
   'Maintenance': { dot: 'bg-[#b45309]', badge: 'Maintenance', variant: 'warning' },
   'Minor Issue': { dot: 'bg-[#1d4ed8]', badge: 'Minor Issue', variant: 'info' },
+}
+
+function StatusBadgeWithFlick({ status, variant, badge }: { status: string; variant: string; badge: string }) {
+  const [flick, setFlick] = useState(false)
+  const prevStatus = useRef(status)
+  useEffect(() => {
+    if (prevStatus.current !== status) {
+      setFlick(true)
+      const t = setTimeout(() => setFlick(false), 600)
+      prevStatus.current = status
+      return () => clearTimeout(t)
+    }
+  }, [status])
+  return <Badge variant={variant as any} className={`text-xs ${flick ? 'animate-attention' : ''}`}>{badge}</Badge>
 }
 
 export function MachinesView() {
@@ -155,7 +169,7 @@ export function MachinesView() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                          <Badge variant={cfg.variant} className="text-xs">{cfg.badge}</Badge>
+                          <StatusBadgeWithFlick status={machine.status} variant={cfg.variant} badge={cfg.badge} />
                         </div>
                       </td>
                     </tr>

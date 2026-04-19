@@ -66,6 +66,19 @@ Stored in browser `localStorage` per device. Corporate default (Navy) applies to
 new users and anonymous sessions. Semantic colors (success green, error red,
 warning amber) are accent-independent and never change.
 
+### Motion
+
+Four subtle animations communicate state, never decorate:
+
+1. **Live pulse** — 6px green dot next to realtime-backed KPIs (Running/Down/Open Issues) on the dashboard. Breathes 2s infinite.
+2. **Status flick** — machine status badge scales once (1 -> 1.08 -> 1) when status changes via realtime. Fires only on state change.
+3. **Nav slide** — sidebar active indicator (2px left border) slides in on route change. 250ms.
+4. **Page fade-up** — content fades in from 8px offset on every route change. 350ms.
+
+All four respect `prefers-reduced-motion`.
+
+Login screen uses an animated line-art factory scene (extruder + flexo printer silhouettes) that draws itself in on load, with two slowly rising "film bubble" loops for ambience.
+
 **Currency:** KWD (Kuwaiti Dinar) throughout — spare parts values, cost reporting.
 
 ---
