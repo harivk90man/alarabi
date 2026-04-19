@@ -74,6 +74,18 @@ const translations: Record<Language, Record<string, string>> = {
     viewLowStock:     'View low stock',
     kwdCurrency:      'KWD',
     perUnit:          'per unit',
+    // Theme picker
+    themeAppearance:  'Appearance',
+    themeMode:        'Mode',
+    themeAccent:      'Accent Color',
+    themeAccentNavy:  'Navy',
+    themeAccentBlue:  'Blue',
+    themeAccentGreen: 'Green',
+    themeAccentPurple:'Purple',
+    themeAccentRose:  'Rose',
+    themeAccentOrange:'Orange',
+    themePreview:     'Preview',
+    themeSeeAll:      'See all settings',
   },
   ar: {
     dashboard:        'لوحة التحكم',
@@ -144,6 +156,18 @@ const translations: Record<Language, Record<string, string>> = {
     viewLowStock:     'عرض المخزون المنخفض',
     kwdCurrency:      'د.ك',
     perUnit:          'للوحدة',
+    // Theme picker
+    themeAppearance:  'المظهر',
+    themeMode:        'الوضع',
+    themeAccent:      'اللون المميز',
+    themeAccentNavy:  'كحلي',
+    themeAccentBlue:  'أزرق',
+    themeAccentGreen: 'أخضر',
+    themeAccentPurple:'بنفسجي',
+    themeAccentRose:  'وردي',
+    themeAccentOrange:'برتقالي',
+    themePreview:     'معاينة',
+    themeSeeAll:      'جميع الإعدادات',
   },
 }
 

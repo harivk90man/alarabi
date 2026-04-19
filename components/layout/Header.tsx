@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ThemePicker } from './ThemePicker'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -38,7 +39,7 @@ export function Header({ onMenuClick }: Props) {
   return (
     <header
       className="sticky top-0 z-50 w-full"
-      style={{ backgroundColor: '#0a2540', borderBottom: '3px solid #1d4ed8' }}
+      style={{ backgroundColor: 'var(--brand-primary)', borderBottom: '3px solid var(--brand-accent)' }}
     >
       <div className="flex h-16 items-center px-4 gap-3">
         {/* Hamburger — mobile only */}
@@ -70,7 +71,7 @@ export function Header({ onMenuClick }: Props) {
 
         <div className="flex-1" />
 
-        {/* User info */}
+        {/* User info + theme + logout */}
         {user && (
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2">
@@ -84,6 +85,7 @@ export function Header({ onMenuClick }: Props) {
               </Badge>
               <span className="text-white/40 font-mono text-xs flex-shrink-0">#{user.id}</span>
             </div>
+            <ThemePicker />
             <Button
               variant="ghost"
               size="sm"

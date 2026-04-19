@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer
       className="w-full mt-auto"
-      style={{ backgroundColor: '#0a2540', borderTop: '3px solid #1d4ed8' }}
+      style={{ backgroundColor: 'var(--brand-primary)', borderTop: '3px solid var(--brand-accent)' }}
     >
       <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left — Brand */}

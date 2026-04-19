@@ -2,6 +2,15 @@
 
 ## v2 (current) — replaces v1
 
+### v2.2 — Theme picker (April 2026)
+
+- Added user theme picker: Light/Dark mode x 6 accent colors (Navy, Blue, Green, Purple, Rose, Orange)
+- Theme stored in localStorage per browser
+- Accessible from header (compact popover with Palette icon) and Settings page (full Appearance card with live preview)
+- Anti-FOUC inline script prevents flash of wrong theme on page load
+- Brand colors (header, sidebar, buttons, focus rings) now use CSS variables that respond to accent selection
+- Semantic colors (success/error/warning/info) independent of accent — Running badges always green
+
 This version reflects what's actually in production as of April 2026. The v1 brief was the initial spec; many things evolved during development that were never fed back into the doc.
 
 ### Added (real, live in production)

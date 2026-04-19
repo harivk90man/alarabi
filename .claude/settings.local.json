@@ -11,7 +11,17 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://alarabi.vercel.app/)",
       "Bash(npx next *)",
       "Bash(grep -c \"placeholder\" .next/static/chunks/app/spares/*.js)",
-      "Bash(grep -c \"searchParts\" .next/static/chunks/app/spares/*.js)"
+      "Bash(grep -c \"searchParts\" .next/static/chunks/app/spares/*.js)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://alarabi.vercel.app/?t=$\\(date +%s\\)\")",
+      "Bash(curl -sL \"https://alarabi.vercel.app/spares\")",
+      "Bash(curl -sL \"https://alarabi.vercel.app/machines\")",
+      "Read(//tmp/**)",
+      "Bash(curl -sL -w \"\\\\n%{url_effective}\" \"https://alarabi.vercel.app/spares\")",
+      "Bash(head -1 echo \"Local layout chunk:\" ls .next/static/chunks/app/layout-*.js)",
+      "Bash(npx vercel *)",
+      "Bash(vercel --prod --yes)",
+      "Bash(ls -la CLAUDE_CODE_THEME_PICKER*)",
+      "Bash(grep -l \"Popover\\\\|popover\" components/ui/*.tsx)"
     ]
   }
 }

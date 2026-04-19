@@ -55,6 +55,17 @@ A production-grade maintenance tracking system for Al Arabi Plastic Factory, man
 | Font | IBM Plex Sans + IBM Plex Mono (for IDs/timestamps) |
 | Logo | Hosted locally at `/public/logo.png` (white version from arabiplastic.com) |
 
+### User Theme Preferences
+
+Users can customize their view via the theme picker (header icon or Settings page):
+
+- **Mode:** Light or Dark
+- **Accent:** Navy (default/corporate), Blue, Green, Purple, Rose, Orange
+
+Stored in browser `localStorage` per device. Corporate default (Navy) applies to
+new users and anonymous sessions. Semantic colors (success green, error red,
+warning amber) are accent-independent and never change.
+
 **Currency:** KWD (Kuwaiti Dinar) throughout — spare parts values, cost reporting.
 
 ---

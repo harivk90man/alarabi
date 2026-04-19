@@ -34,6 +34,19 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="APF Maint" />
+        {/* Anti-FOUC: apply theme mode + accent before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              try {
+                var mode = localStorage.getItem('alarabi_theme_mode') || localStorage.getItem('alarabi_theme') || 'light';
+                var accent = localStorage.getItem('alarabi_theme_accent') || 'navy';
+                if (mode === 'dark') document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-accent', accent);
+              } catch(e) {}
+            })();`,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>

@@ -27,13 +27,7 @@
     --ring: 224 76% 48%;
     --radius: 0.5rem;
 
-    /* Brand — Al Arabi corporate navy */
-    --brand-primary: #0a2540;
-    --brand-primary-600: #12315a;
-    --brand-accent: #1d4ed8;
-    --brand-accent-hover: #1e40af;
-
-    /* Semantic */
+    /* Semantic — never change with accent */
     --success: #16a34a;
     --error: #dc2626;
     --warning: #b45309;
@@ -68,10 +62,6 @@
     --border: 222 15% 22%;
     --input: 222 15% 22%;
 
-    /* Brand — dark mode */
-    --brand-primary: #0a1929;
-    --brand-accent: #3b82f6;
-
     /* Dark app surface */
     --app-bg: #0f172a;
     --app-card: #1e293b;
@@ -83,6 +73,78 @@
     --app-nav-hover: #1e293b;
     --app-nav-active-text: #ffffff;
     --app-input-bg: #1e293b;
+  }
+
+  /* ── Accent: Navy (default) ─────────────────────────────── */
+  [data-accent="navy"], :root {
+    --brand-primary:      #0a2540;
+    --brand-primary-600:  #12315a;
+    --brand-accent:       #1d4ed8;
+    --brand-accent-hover: #1e40af;
+  }
+  [data-accent="navy"].dark, .dark {
+    --brand-primary:      #0a1929;
+    --brand-accent:       #3b82f6;
+  }
+
+  /* ── Accent: Blue ───────────────────────────────────────── */
+  [data-accent="blue"] {
+    --brand-primary:      #1e3a8a;
+    --brand-primary-600:  #1e40af;
+    --brand-accent:       #3b82f6;
+    --brand-accent-hover: #2563eb;
+  }
+  [data-accent="blue"].dark {
+    --brand-primary:      #1e293b;
+    --brand-accent:       #60a5fa;
+  }
+
+  /* ── Accent: Green ──────────────────────────────────────── */
+  [data-accent="green"] {
+    --brand-primary:      #064e3b;
+    --brand-primary-600:  #065f46;
+    --brand-accent:       #10b981;
+    --brand-accent-hover: #059669;
+  }
+  [data-accent="green"].dark {
+    --brand-primary:      #022c22;
+    --brand-accent:       #34d399;
+  }
+
+  /* ── Accent: Purple ─────────────────────────────────────── */
+  [data-accent="purple"] {
+    --brand-primary:      #4c1d95;
+    --brand-primary-600:  #5b21b6;
+    --brand-accent:       #8b5cf6;
+    --brand-accent-hover: #7c3aed;
+  }
+  [data-accent="purple"].dark {
+    --brand-primary:      #2e1065;
+    --brand-accent:       #a78bfa;
+  }
+
+  /* ── Accent: Rose ───────────────────────────────────────── */
+  [data-accent="rose"] {
+    --brand-primary:      #881337;
+    --brand-primary-600:  #9f1239;
+    --brand-accent:       #f43f5e;
+    --brand-accent-hover: #e11d48;
+  }
+  [data-accent="rose"].dark {
+    --brand-primary:      #4c0519;
+    --brand-accent:       #fb7185;
+  }
+
+  /* ── Accent: Orange ─────────────────────────────────────── */
+  [data-accent="orange"] {
+    --brand-primary:      #7c2d12;
+    --brand-primary-600:  #9a3412;
+    --brand-accent:       #f97316;
+    --brand-accent-hover: #ea580c;
+  }
+  [data-accent="orange"].dark {
+    --brand-primary:      #431407;
+    --brand-accent:       #fb923c;
   }
 
   * {
