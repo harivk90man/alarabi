@@ -138,7 +138,11 @@ export function MachinesView() {
                   return (
                     <tr
                       key={machine.id}
-                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+                      className="cursor-pointer transition-colors"
+                      style={isSelected ? { backgroundColor: 'var(--app-nav-hover)' } : {}
+                      }
+                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--app-nav-hover)' }}
+                      onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
                       onClick={() => setSelected(isSelected ? null : machine)}
                     >
                       <td className="px-4 py-3">

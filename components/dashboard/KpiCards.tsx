@@ -131,7 +131,7 @@ export function KpiCards() {
           style={{ backgroundColor: bg, borderColor: border }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium" style={{ color: '#4b5563' }}>{label}</span>
+            <span className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>{label}</span>
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center ${pulse ? 'animate-pulse' : ''}`}
               style={{ backgroundColor: color + '20' }}

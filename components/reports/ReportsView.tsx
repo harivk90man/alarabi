@@ -345,7 +345,7 @@ export function ReportsView() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { label: 'Total Issues', value: data?.summary.total ?? 0, color: '#1a1a18' },
+            { label: 'Total Issues', value: data?.summary.total ?? 0, color: 'var(--app-text)' },
             { label: 'Breakdowns', value: data?.summary.breakdowns ?? 0, color: '#dc2626' },
             { label: 'Minor Issues', value: data?.summary.minor ?? 0, color: '#b45309' },
             { label: 'Preventive', value: data?.summary.preventive ?? 0, color: '#1d4ed8' },
@@ -538,7 +538,7 @@ export function ReportsView() {
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
               {data.issues.map(issue => (
-                <tr key={issue.id} className="hover:bg-gray-50/50">
+                <tr key={issue.id}>
                   <td className="py-2 pr-3 font-mono font-bold" style={{ color: 'var(--app-text)' }}>{issue.issue_number}</td>
                   <td className="py-2 pr-3 font-mono text-[#1d4ed8]">{issue.machine_id}</td>
                   <td className="py-2 pr-3 capitalize">{issue.type}</td>

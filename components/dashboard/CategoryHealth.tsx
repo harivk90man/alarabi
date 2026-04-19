@@ -50,7 +50,7 @@ export function CategoryHealth() {
   }, [])
 
   if (loading) {
-    return <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />
+    return <div className="h-48 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
   }
 
   return (

@@ -79,7 +79,7 @@ export function OpenIssuesList() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="h-16 rounded animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
           ))}
         </div>
       ) : issues.length === 0 ? (
