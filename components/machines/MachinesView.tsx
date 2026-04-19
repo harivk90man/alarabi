@@ -73,8 +73,8 @@ export function MachinesView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Machines</h1>
-          <p className="text-gray-500 text-sm mt-1">{machines.length} machines · {filtered.length} shown</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Machines</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{machines.length} machines · {filtered.length} shown</p>
         </div>
         <Button onClick={() => handleLogIssue('')} className="gap-2">
           <Plus className="w-4 h-4" />
@@ -108,26 +108,26 @@ export function MachinesView() {
 
       <div className="flex gap-4">
         {/* Table */}
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="flex-1 rounded-lg border overflow-hidden" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="border-b" style={{ backgroundColor: 'var(--app-nav-hover)', borderColor: 'var(--app-card-border)' }}>
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">ID</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Name</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden md:table-cell">Model</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden lg:table-cell">Category</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide hidden xl:table-cell">Manufacturer</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>ID</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>Name</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide hidden md:table-cell" style={{ color: 'var(--app-text-muted)' }}>Model</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>Category</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide hidden xl:table-cell" style={{ color: 'var(--app-text-muted)' }}>Manufacturer</th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
                       {Array.from({ length: 6 }).map((_, j) => (
                         <td key={j} className="px-4 py-3">
-                          <div className="h-4 bg-gray-100 rounded animate-pulse" />
+                          <div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
                         </td>
                       ))}
                     </tr>
@@ -142,12 +142,12 @@ export function MachinesView() {
                       onClick={() => setSelected(isSelected ? null : machine)}
                     >
                       <td className="px-4 py-3">
-                        <span className="font-mono font-medium text-gray-900">{machine.id}</span>
+                        <span className="font-mono font-medium" style={{ color: 'var(--app-text)' }}>{machine.id}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-800 max-w-[200px] truncate">{machine.name}</td>
-                      <td className="px-4 py-3 text-gray-500 hidden md:table-cell font-mono text-xs">{machine.model ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500 hidden lg:table-cell">{machine.categories?.name ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-500 hidden xl:table-cell">{machine.manufacturer ?? '—'}</td>
+                      <td className="px-4 py-3 max-w-[200px] truncate" style={{ color: 'var(--app-text)' }}>{machine.name}</td>
+                      <td className="px-4 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'var(--app-text-muted)' }}>{machine.model ?? '—'}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>{machine.categories?.name ?? '—'}</td>
+                      <td className="px-4 py-3 hidden xl:table-cell" style={{ color: 'var(--app-text-muted)' }}>{machine.manufacturer ?? '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
@@ -161,7 +161,7 @@ export function MachinesView() {
             </table>
           </div>
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12" style={{ color: 'var(--app-text-muted)' }}>
               No machines match your filters
             </div>
           )}

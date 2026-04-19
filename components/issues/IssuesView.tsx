@@ -266,12 +266,13 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit overflow-x-auto">
+      <div className="flex gap-1 p-1 rounded-lg w-fit overflow-x-auto" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
         {TABS.map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-              tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}>
+              tab === key ? 'shadow-sm' : ''
+            }`}
+            style={tab === key ? { backgroundColor: 'var(--app-card)', color: 'var(--app-text)' } : { color: 'var(--app-text-muted)' }}>
             {label}
           </button>
         ))}
@@ -280,11 +281,11 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-24 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
           ))}
         </div>
       ) : issues.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16" style={{ color: 'var(--app-text-muted)' }}>
           <CheckCircle className="w-10 h-10 mx-auto mb-3" />
           <p>No issues found</p>
         </div>
@@ -298,7 +299,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                    <span className="font-mono text-sm font-bold text-gray-700">{issue.issue_number}</span>
+                    <span className="font-mono text-sm font-bold" style={{ color: 'var(--app-text)' }}>{issue.issue_number}</span>
                     <span className="font-mono text-sm font-medium text-[#1d4ed8]">{issue.machine_id}</span>
                     {issue.description && (
                       <Badge variant={typeVariant[issue.type] ?? 'outline'} className="text-xs">{issue.type}</Badge>
@@ -308,7 +309,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                     </Badge>
                     {issue.downtime && <Badge variant="destructive" className="text-xs">DOWNTIME</Badge>}
                     {issue.maintenance_category_code && (
-                      <span className="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--app-nav-hover)', color: 'var(--app-text-muted)' }}>
                         {issue.maintenance_category_code}
                       </span>
                     )}
@@ -317,7 +318,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                   {/* Description — if empty show pending label */}
                   {issue.description
                     ? <p className="text-sm" style={{ color: 'var(--app-text)' }}>{issue.description}</p>
-                    : <p className="text-sm italic text-gray-400">Awaiting technician assessment</p>
+                    : <p className="text-sm italic" style={{ color: 'var(--app-text-muted)' }}>Awaiting technician assessment</p>
                   }
 
                   <div className="flex flex-wrap gap-4 mt-1.5 text-xs" style={{ color: 'var(--app-text-muted)' }}>
@@ -364,7 +365,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
               {/* ── Assign form ─────────────────────────────────────────────── */}
               {assigning === issue.id && (
-                <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2 max-w-xs">
+                <div className="mt-3 pt-3 border-t flex flex-col gap-2 max-w-xs" style={{ borderColor: 'var(--app-card-border)' }}>
                   <Select value={assignTarget} onValueChange={setAssignTarget}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select technician..." />
@@ -393,11 +394,11 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
               {/* ── Resolve form ─────────────────────────────────────────────── */}
               {resolving === issue.id && (
-                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                <div className="mt-3 pt-3 border-t space-y-3" style={{ borderColor: 'var(--app-card-border)' }}>
 
                   {/* Issue Type */}
                   <div>
-                    <Label className="text-xs font-medium text-gray-600 mb-1.5 block">Issue Type *</Label>
+                    <Label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--app-text-muted)' }}>Issue Type *</Label>
                     <div className="grid grid-cols-3 gap-2">
                       {ISSUE_TYPES.map(({ value, label, icon: Icon, color, bg, border }) => (
                         <button key={value} type="button"
@@ -414,7 +415,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
                   {/* Work Order Category */}
                   <div>
-                    <Label className="text-xs font-medium text-gray-600 mb-1 block">Work Order Category</Label>
+                    <Label className="text-xs font-medium mb-1 block" style={{ color: 'var(--app-text-muted)' }}>Work Order Category</Label>
                     <Select value={resolveCategoryCode || '__none__'}
                       onValueChange={v => setResolveCategoryCode(v === '__none__' ? '' : v)}>
                       <SelectTrigger className="h-8 text-xs">
@@ -442,7 +443,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
                   {/* Work Description */}
                   <div>
-                    <Label className="text-xs font-medium text-gray-600 mb-1 block">Work Description *</Label>
+                    <Label className="text-xs font-medium mb-1 block" style={{ color: 'var(--app-text-muted)' }}>Work Description *</Label>
                     <Textarea placeholder="Describe what was found and what work was done..."
                       value={resolveDescription}
                       onChange={e => setResolveDescription(e.target.value)}
@@ -451,7 +452,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
                   {/* Resolution Notes */}
                   <div>
-                    <Label className="text-xs font-medium text-gray-600 mb-1 block">Resolution Notes</Label>
+                    <Label className="text-xs font-medium mb-1 block" style={{ color: 'var(--app-text-muted)' }}>Resolution Notes</Label>
                     <Textarea placeholder="Any additional notes, follow-up actions... (optional)"
                       value={resolveResolution}
                       onChange={e => setResolveResolution(e.target.value)}
@@ -460,7 +461,7 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
 
                   {/* Spare Parts Used */}
                   <div>
-                    <Label className="text-xs font-medium text-gray-600 mb-1 block">Spare Parts Used</Label>
+                    <Label className="text-xs font-medium mb-1 block" style={{ color: 'var(--app-text-muted)' }}>Spare Parts Used</Label>
                     <Input
                       placeholder="Search parts by number, name, or description..."
                       onChange={e => searchParts(e.target.value)}
@@ -492,9 +493,9 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
                         {resolveParts.map(p => {
                           const part = spareParts.find(sp => sp.id === p.partId)
                           return (
-                            <div key={p.partId} className="flex items-center justify-between bg-gray-50 rounded px-2 py-1.5 text-xs">
+                            <div key={p.partId} className="flex items-center justify-between rounded px-2 py-1.5 text-xs" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
                               <span>
-                                <span className="font-mono text-gray-400">{part?.part_number}</span>
+                                <span className="font-mono" style={{ color: 'var(--app-text-muted)' }}>{part?.part_number}</span>
                                 {' '}{part?.name} × {p.quantity}
                               </span>
                               <button onClick={() => setResolveParts(resolveParts.filter(x => x.partId !== p.partId))}

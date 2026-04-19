@@ -56,8 +56,8 @@ export default function OperatorsPage() {
     <AppShell>
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Operators</h1>
-          <p className="text-gray-500 text-sm mt-1">{operators.length} active operators</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Operators</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{operators.length} active operators</p>
         </div>
 
         <div className="relative max-w-sm">
@@ -73,7 +73,7 @@ export default function OperatorsPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-28 bg-gray-100 rounded-lg animate-pulse" />
+              <div key={i} className="h-28 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
             ))}
           </div>
         ) : (
@@ -81,11 +81,12 @@ export default function OperatorsPage() {
             {filtered.map(op => (
               <div
                 key={op.id}
-                className="bg-white rounded-lg border border-gray-200 p-4"
+                className="rounded-lg border p-4"
+                style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-semibold text-gray-900">{op.name}</p>
+                    <p className="font-semibold" style={{ color: 'var(--app-text)' }}>{op.name}</p>
                     <p className="font-mono text-xs text-gray-400 mt-0.5">#{op.id}</p>
                   </div>
                   <Badge

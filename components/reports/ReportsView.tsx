@@ -232,8 +232,8 @@ export function ReportsView() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Reports</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>
             Analytics and performance insights
             {!loading && data && (
               <span className="ml-2 text-[#1d4ed8] font-medium">
@@ -272,7 +272,7 @@ export function ReportsView() {
       </div>
 
       {/* Period selector + custom date range */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+      <div className="rounded-lg border p-4 space-y-3" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
         <div className="flex flex-wrap gap-2">
           {PERIODS.map(({ key, label }) => (
             <button
@@ -281,8 +281,9 @@ export function ReportsView() {
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
                 period === key
                   ? 'bg-[#1d4ed8] text-white border-[#1d4ed8]'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#1d4ed8] hover:text-[#1d4ed8]'
+                  : 'border-transparent hover:border-[#1d4ed8] hover:text-[#1d4ed8]'
               }`}
+              style={period !== key ? { backgroundColor: 'var(--app-card)', color: 'var(--app-text-muted)', borderColor: 'var(--app-card-border)' } : undefined}
             >
               {key === 'custom' && <CalendarRange className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
               {label}
@@ -292,9 +293,9 @@ export function ReportsView() {
 
         {/* Custom date range inputs */}
         {period === 'custom' && (
-          <div className="flex flex-wrap gap-4 items-end pt-1 border-t border-gray-100">
+          <div className="flex flex-wrap gap-4 items-end pt-1 border-t" style={{ borderColor: 'var(--app-card-border)' }}>
             <div className="space-y-1">
-              <Label className="text-xs text-gray-500">From</Label>
+              <Label className="text-xs" style={{ color: 'var(--app-text-muted)' }}>From</Label>
               <Input
                 type="date"
                 value={customFrom}
@@ -304,7 +305,7 @@ export function ReportsView() {
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-gray-500">To</Label>
+              <Label className="text-xs" style={{ color: 'var(--app-text-muted)' }}>To</Label>
               <Input
                 type="date"
                 value={customTo}
@@ -314,7 +315,7 @@ export function ReportsView() {
                 className="w-40 h-8 text-sm"
               />
             </div>
-            <div className="text-xs text-gray-400 pb-1.5">
+            <div className="text-xs pb-1.5" style={{ color: 'var(--app-text-muted)' }}>
               {(() => {
                 const days = Math.round((new Date(customTo).getTime() - new Date(customFrom).getTime()) / 86400000)
                 return `${days + 1} day${days !== 0 ? 's' : ''} selected`
@@ -324,9 +325,9 @@ export function ReportsView() {
         )}
 
         {/* Active range label */}
-        <div className="text-xs text-gray-400 flex items-center gap-1">
+        <div className="text-xs flex items-center gap-1" style={{ color: 'var(--app-text-muted)' }}>
           <CalendarRange className="w-3 h-3" />
-          Showing: <span className="font-medium text-gray-600">
+          Showing: <span className="font-medium" style={{ color: 'var(--app-text)' }}>
             {from.toLocaleDateString('en-KW', { day: '2-digit', month: 'short', year: 'numeric' })}
             {' '}&rarr;{' '}
             {to.toLocaleDateString('en-KW', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -338,7 +339,7 @@ export function ReportsView() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-20 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
           ))}
         </div>
       ) : (
@@ -350,8 +351,8 @@ export function ReportsView() {
             { label: 'Preventive', value: data?.summary.preventive ?? 0, color: '#1d4ed8' },
             { label: 'Total Downtime', value: formatDuration(data?.totalDowntimeMin ?? 0), color: '#dc2626', isText: true },
           ].map(({ label, value, color, isText }) => (
-            <div key={label} className="bg-white rounded-lg border border-gray-200 p-4">
-              <p className="text-xs text-gray-500 font-medium">{label}</p>
+            <div key={label} className="rounded-lg border p-4" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+              <p className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>{label}</p>
               <p className={`font-bold mt-1 ${isText ? 'text-xl' : 'text-3xl'}`} style={{ color }}>{value}</p>
             </div>
           ))}
@@ -360,8 +361,8 @@ export function ReportsView() {
 
       {/* Distribution bar */}
       {!loading && data && data.summary.total > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Issue Type Distribution</h2>
+        <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--app-text)' }}>Issue Type Distribution</h2>
           <div className="flex h-7 rounded-lg overflow-hidden gap-0.5">
             {breakdown_pct > 0 && (
               <div className="flex items-center justify-center text-white text-xs font-medium"
@@ -382,7 +383,7 @@ export function ReportsView() {
               </div>
             )}
           </div>
-          <div className="flex gap-5 mt-2 text-xs text-gray-500">
+          <div className="flex gap-5 mt-2 text-xs" style={{ color: 'var(--app-text-muted)' }}>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#dc2626]" />Breakdown ({data.summary.breakdowns})</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#b45309]" />Minor ({data.summary.minor})</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#1d4ed8]" />Preventive ({data.summary.preventive})</span>
@@ -393,10 +394,10 @@ export function ReportsView() {
       {!loading && data && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Downtime chart */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top Downtime Machines</h2>
+          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Top Downtime Machines</h2>
             {data.downtimeMachines.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No breakdown data for this period</p>
+              <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No breakdown data for this period</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data.downtimeMachines} layout="vertical" margin={{ left: 8 }}>
@@ -415,29 +416,29 @@ export function ReportsView() {
           </div>
 
           {/* Operator performance */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Operator Performance</h2>
+          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Operator Performance</h2>
             {data.operatorStats.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No resolved issues for this period</p>
+              <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No resolved issues for this period</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                  <tr className="border-b text-xs uppercase tracking-wide" style={{ borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
                     <th className="text-left pb-2">Name</th>
                     <th className="text-right pb-2">Resolved</th>
                     <th className="text-right pb-2">Avg Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
                   {data.operatorStats.map(op => (
                     <tr key={op.name}>
-                      <td className="py-2 font-medium text-gray-800">{op.name}</td>
+                      <td className="py-2 font-medium" style={{ color: 'var(--app-text)' }}>{op.name}</td>
                       <td className="py-2 text-right">
                         <span className="inline-block bg-green-100 text-green-700 font-mono text-xs px-2 py-0.5 rounded-full">
                           {op.resolved}
                         </span>
                       </td>
-                      <td className="py-2 text-right text-gray-500 font-mono text-xs">
+                      <td className="py-2 text-right font-mono text-xs" style={{ color: 'var(--app-text-muted)' }}>
                         {op.avg_minutes > 0 ? formatDuration(op.avg_minutes) : '—'}
                       </td>
                     </tr>
@@ -453,22 +454,22 @@ export function ReportsView() {
       {!loading && partsUsage && (partsUsage.byCategory.length > 0 || partsUsage.topConsumed.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* By category */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Parts Usage by Category (KWD)</h2>
+          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Parts Usage by Category (KWD)</h2>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                <tr className="border-b text-xs uppercase tracking-wide" style={{ borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
                   <th className="text-left pb-2">Category</th>
                   <th className="text-left pb-2">Sub-Category</th>
                   <th className="text-right pb-2">Used</th>
                   <th className="text-right pb-2">Value (KWD)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
                 {partsUsage.byCategory.slice(0, 15).map((row, i) => (
                   <tr key={i}>
-                    <td className="py-2 text-gray-800">{row.category}</td>
-                    <td className="py-2 text-gray-500 text-xs">{row.stock_category ?? '—'}</td>
+                    <td className="py-2" style={{ color: 'var(--app-text)' }}>{row.category}</td>
+                    <td className="py-2 text-xs" style={{ color: 'var(--app-text-muted)' }}>{row.stock_category ?? '—'}</td>
                     <td className="py-2 text-right font-mono">{row.total_used}</td>
                     <td className="py-2 text-right font-mono font-medium">{row.total_cost.toFixed(2)}</td>
                   </tr>
@@ -476,8 +477,8 @@ export function ReportsView() {
               </tbody>
               {partsUsage.byCategory.length > 0 && (
                 <tfoot>
-                  <tr className="border-t border-gray-200">
-                    <td colSpan={3} className="py-2 font-semibold text-gray-800">Total</td>
+                  <tr className="border-t" style={{ borderColor: 'var(--app-card-border)' }}>
+                    <td colSpan={3} className="py-2 font-semibold" style={{ color: 'var(--app-text)' }}>Total</td>
                     <td className="py-2 text-right font-mono font-bold">
                       {partsUsage.byCategory.reduce((s, r) => s + r.total_cost, 0).toFixed(2)} KWD
                     </td>
@@ -488,27 +489,27 @@ export function ReportsView() {
           </div>
 
           {/* Top consumed */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Top 10 Most-Consumed Parts</h2>
+          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Top 10 Most-Consumed Parts</h2>
             {partsUsage.topConsumed.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">No parts consumed in this period</p>
+              <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No parts consumed in this period</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
+                  <tr className="border-b text-xs uppercase tracking-wide" style={{ borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
                     <th className="text-left pb-2">Part</th>
                     <th className="text-left pb-2">Name</th>
                     <th className="text-right pb-2">Used</th>
                     <th className="text-right pb-2">Cost/Unit</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
                   {partsUsage.topConsumed.map(p => (
                     <tr key={p.part_number}>
-                      <td className="py-2 font-mono text-xs text-gray-600">{p.part_number}</td>
-                      <td className="py-2 text-gray-800 max-w-[160px] truncate">{p.name}</td>
+                      <td className="py-2 font-mono text-xs" style={{ color: 'var(--app-text-muted)' }}>{p.part_number}</td>
+                      <td className="py-2 max-w-[160px] truncate" style={{ color: 'var(--app-text)' }}>{p.name}</td>
                       <td className="py-2 text-right font-mono font-bold">{p.total_used}</td>
-                      <td className="py-2 text-right font-mono text-gray-500">{p.unit_cost > 0 ? `${p.unit_cost.toFixed(2)}` : '—'}</td>
+                      <td className="py-2 text-right font-mono" style={{ color: 'var(--app-text-muted)' }}>{p.unit_cost > 0 ? `${p.unit_cost.toFixed(2)}` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -520,11 +521,11 @@ export function ReportsView() {
 
       {/* Issues detail table */}
       {!loading && data && data.issues.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-5 overflow-x-auto">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Issues Detail</h2>
+        <div className="rounded-lg border p-5 overflow-x-auto" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Issues Detail</h2>
           <table className="w-full text-xs min-w-[900px]">
             <thead>
-              <tr className="border-b border-gray-100 text-gray-500 uppercase tracking-wide">
+              <tr className="border-b uppercase tracking-wide" style={{ borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
                 <th className="text-left pb-2 pr-3 whitespace-nowrap">Issue #</th>
                 <th className="text-left pb-2 pr-3 whitespace-nowrap">Machine</th>
                 <th className="text-left pb-2 pr-3 whitespace-nowrap">Type</th>
@@ -535,13 +536,13 @@ export function ReportsView() {
                 <th className="text-left pb-2">Resolution</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
               {data.issues.map(issue => (
-                <tr key={issue.id} className="hover:bg-gray-50">
-                  <td className="py-2 pr-3 font-mono font-bold text-gray-700">{issue.issue_number}</td>
+                <tr key={issue.id} className="hover:bg-gray-50/50">
+                  <td className="py-2 pr-3 font-mono font-bold" style={{ color: 'var(--app-text)' }}>{issue.issue_number}</td>
                   <td className="py-2 pr-3 font-mono text-[#1d4ed8]">{issue.machine_id}</td>
                   <td className="py-2 pr-3 capitalize">{issue.type}</td>
-                  <td className="py-2 pr-3 text-gray-500 max-w-[160px]">
+                  <td className="py-2 pr-3 max-w-[160px]" style={{ color: 'var(--app-text-muted)' }}>
                     {issue.maintenance_category_code
                       ? <span title={issue.maintenance_category_code}>
                           {data.categoryMap[issue.maintenance_category_code] ?? issue.maintenance_category_code}
@@ -555,9 +556,9 @@ export function ReportsView() {
                       'bg-red-100 text-red-700'
                     }`}>{issue.status.replace('_', ' ')}</span>
                   </td>
-                  <td className="py-2 pr-3 text-gray-600">{issue.assignee_name ?? '—'}</td>
-                  <td className="py-2 pr-3 font-mono text-gray-500">{issue.duration_minutes ? formatDuration(issue.duration_minutes) : '—'}</td>
-                  <td className="py-2 text-gray-500 max-w-[200px] truncate">{issue.resolution || '—'}</td>
+                  <td className="py-2 pr-3" style={{ color: 'var(--app-text-muted)' }}>{issue.assignee_name ?? '—'}</td>
+                  <td className="py-2 pr-3 font-mono" style={{ color: 'var(--app-text-muted)' }}>{issue.duration_minutes ? formatDuration(issue.duration_minutes) : '—'}</td>
+                  <td className="py-2 max-w-[200px] truncate" style={{ color: 'var(--app-text-muted)' }}>{issue.resolution || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -567,7 +568,7 @@ export function ReportsView() {
 
       {/* No data state */}
       {!loading && data && data.summary.total === 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 py-16 text-center text-gray-400">
+        <div className="rounded-lg border py-16 text-center" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
           <FileText className="w-10 h-10 mx-auto mb-3" />
           <p className="font-medium">No issues in this period</p>
           <p className="text-sm mt-1">Try a wider date range</p>

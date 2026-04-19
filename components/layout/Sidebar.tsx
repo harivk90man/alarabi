@@ -95,6 +95,7 @@ export function Sidebar({ open, onClose }: Props) {
     { href: '/dashboard', icon: LayoutDashboard, label: t('dashboard'),    badge: 0 },
     { href: '/my-issues', icon: Wrench,          label: t('myWorkOrders'), badge: assignedCount },
     { href: '/machines',  icon: Cpu,             label: t('machines'),     badge: 0 },
+    { href: '/spares',    icon: Package,          label: t('spareParts'),   badge: 0 },
     { href: '/settings',  icon: Settings,        label: t('settings'),     badge: 0 },
   ]
 

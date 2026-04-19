@@ -56,10 +56,10 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
   const st = statusMap[machine.status] ?? statusMap['Running']
 
   return (
-    <div className="w-80 xl:w-96 bg-white rounded-lg border border-gray-200 flex flex-col flex-shrink-0">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+    <div className="w-80 xl:w-96 rounded-lg border flex flex-col flex-shrink-0" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--app-card-border)' }}>
         <div>
-          <span className="font-mono font-bold text-gray-900 text-lg">{machine.id}</span>
+          <span className="font-mono font-bold text-lg" style={{ color: 'var(--app-text)' }}>{machine.id}</span>
           <div
             className="inline-block ml-2 px-2 py-0.5 rounded-full text-xs text-white font-medium"
             style={{ backgroundColor: st.color }}
@@ -72,30 +72,30 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
         </Button>
       </div>
 
-      <div className="p-4 space-y-3 border-b border-gray-100 text-sm">
+      <div className="p-4 space-y-3 border-b text-sm" style={{ borderColor: 'var(--app-card-border)' }}>
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Name</p>
-          <p className="text-gray-800 font-medium">{machine.name}</p>
+          <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Name</p>
+          <p className="font-medium" style={{ color: 'var(--app-text)' }}>{machine.name}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Model</p>
-            <p className="text-gray-700 font-mono text-xs">{machine.model ?? '—'}</p>
+            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Model</p>
+            <p className="font-mono text-xs" style={{ color: 'var(--app-text)' }}>{machine.model ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Category</p>
-            <p className="text-gray-700">{machine.categories?.name ?? '—'}</p>
+            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Category</p>
+            <p style={{ color: 'var(--app-text)' }}>{machine.categories?.name ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Manufacturer</p>
-            <p className="text-gray-700">{machine.manufacturer ?? '—'}</p>
+            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Manufacturer</p>
+            <p style={{ color: 'var(--app-text)' }}>{machine.manufacturer ?? '—'}</p>
           </div>
         </div>
       </div>
 
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700">Recent Issues</h3>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--app-text)' }}>Recent Issues</h3>
           <Button size="sm" onClick={onLogIssue} className="h-7 text-xs gap-1">
             <Plus className="w-3 h-3" />
             Log Issue
@@ -103,13 +103,13 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
         </div>
 
         {issues.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-6">No issues recorded</p>
+          <p className="text-xs text-center py-6" style={{ color: 'var(--app-text-muted)' }}>No issues recorded</p>
         ) : (
           <div className="space-y-2">
             {issues.map(issue => (
-              <div key={issue.id} className="p-2.5 rounded-md bg-gray-50 text-xs">
+              <div key={issue.id} className="p-2.5 rounded-md text-xs" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-mono text-gray-500">{issue.issue_number}</span>
+                  <span className="font-mono" style={{ color: 'var(--app-text-muted)' }}>{issue.issue_number}</span>
                   <div className="flex gap-1">
                     <Badge variant={typeVariant[issue.type] ?? 'outline'} className="text-[10px] px-1 py-0">
                       {issue.type}
@@ -122,8 +122,8 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
                     </Badge>
                   </div>
                 </div>
-                <p className="text-gray-700 line-clamp-2">{issue.description}</p>
-                <div className="text-gray-400 mt-1 flex justify-between">
+                <p className="line-clamp-2" style={{ color: 'var(--app-text)' }}>{issue.description}</p>
+                <div className="mt-1 flex justify-between" style={{ color: 'var(--app-text-muted)' }}>
                   <span>{timeAgo(issue.start_time)}</span>
                   {issue.duration_minutes && (
                     <span>{Math.round(issue.duration_minutes)}m</span>

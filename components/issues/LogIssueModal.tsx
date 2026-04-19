@@ -321,9 +321,9 @@ export function LogIssueModal({ open, onClose, defaultMachineId, reportedBy, onS
                   {parts.map(p => {
                     const part = spareParts.find(sp => sp.id === p.partId)
                     return (
-                      <div key={p.partId} className="flex items-center justify-between bg-gray-50 rounded px-3 py-2 text-sm">
+                      <div key={p.partId} className="flex items-center justify-between rounded px-3 py-2 text-sm" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
                         <span>
-                          <span className="font-mono text-gray-500">{part?.part_number}</span>
+                          <span className="font-mono" style={{ color: 'var(--app-text-muted)' }}>{part?.part_number}</span>
                           {' '}{part?.name} × {p.quantity}
                         </span>
                         <button onClick={() => removePart(p.partId)} className="text-gray-400 hover:text-red-500">

@@ -2,13 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Plus, Pencil, Check, X, Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import { logAudit } from '@/lib/audit'
 import { useAuth } from '@/lib/auth-context'
@@ -18,20 +16,12 @@ import type { SparePart } from '@/types/database'
 const PAGE_SIZE = 50
 const CATEGORIES = ['Electrical', 'Mechanical', 'Pneumatic', 'Sensor', 'Consumable']
 
-type StockFilter = 'all' | 'in_stock' | 'low' | 'out'
-
 const categoryBadgeColors: Record<string, string> = {
   Electrical: 'bg-blue-100 text-blue-700',
   Mechanical: 'bg-slate-100 text-slate-700',
   Pneumatic: 'bg-sky-100 text-sky-700',
   Sensor: 'bg-amber-100 text-amber-700',
   Consumable: 'bg-green-100 text-green-700',
-}
-
-function getStockStatus(qty: number, min: number): { label: string; variant: 'success' | 'warning' | 'destructive' } {
-  if (qty === 0) return { label: 'OUT', variant: 'destructive' }
-  if (qty <= min) return { label: 'LOW', variant: 'warning' }
-  return { label: 'OK', variant: 'success' }
 }
 
 export function SparesView() {
@@ -41,7 +31,6 @@ export function SparesView() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [stockFilter, setStockFilter] = useState<StockFilter>('all')
 
   // Edit inline
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -73,14 +62,6 @@ export function SparesView() {
       query = query.eq('category', categoryFilter)
     }
 
-    if (stockFilter === 'out') {
-      query = query.eq('quantity', 0)
-    } else if (stockFilter === 'low') {
-      query = query.gt('quantity', 0)
-    } else if (stockFilter === 'in_stock') {
-      query = query.gt('quantity', 0)
-    }
-
     if (search.trim()) {
       const s = `%${search.trim()}%`
       query = query.or(`part_number.ilike.${s},name.ilike.${s},description.ilike.${s}`)
@@ -89,24 +70,15 @@ export function SparesView() {
     query = query.order('part_number').range(from, to)
 
     const { data, count } = await query
-    let fetched = (data ?? []) as SparePart[]
-
-    // Post-filter for low vs in_stock (can't compare two columns server-side)
-    if (stockFilter === 'low') {
-      fetched = fetched.filter(p => p.quantity <= p.min_quantity)
-    } else if (stockFilter === 'in_stock') {
-      fetched = fetched.filter(p => p.quantity > p.min_quantity)
-    }
-
-    setParts(fetched)
+    setParts((data ?? []) as SparePart[])
     setTotalCount(count ?? 0)
     setLoading(false)
-  }, [page, search, categoryFilter, stockFilter])
+  }, [page, search, categoryFilter])
 
   useEffect(() => { fetchParts() }, [fetchParts])
 
   // Reset page on filter change
-  useEffect(() => { setPage(1) }, [search, categoryFilter, stockFilter])
+  useEffect(() => { setPage(1) }, [search, categoryFilter])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
@@ -144,16 +116,13 @@ export function SparesView() {
     fetchParts()
   }
 
-  const lowCount = parts.filter(p => p.quantity > 0 && p.quantity <= p.min_quantity).length
-  const outCount = parts.filter(p => p.quantity === 0).length
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>{t('sparesTitle')}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>
-            {totalCount} {t('parts')} · {lowCount} {t('lowStock').toLowerCase()} · {outCount} {t('outOfStock').toLowerCase()}
+            {totalCount} {t('parts')}
           </p>
         </div>
         <Button onClick={() => setShowAdd(!showAdd)} className="gap-2">
@@ -180,17 +149,6 @@ export function SparesView() {
           <SelectContent>
             <SelectItem value="all">{t('allCategories')}</SelectItem>
             {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={stockFilter} onValueChange={v => setStockFilter(v as StockFilter)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder={t('allStatuses')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('allStatuses')}</SelectItem>
-            <SelectItem value="in_stock">{t('inStock')}</SelectItem>
-            <SelectItem value="low">{t('lowStock')}</SelectItem>
-            <SelectItem value="out">{t('outOfStock')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -258,22 +216,19 @@ export function SparesView() {
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>Name</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide hidden md:table-cell" style={{ color: 'var(--app-text-muted)' }}>{t('category')}</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>Stock</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>Min</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>{t('unitCostKWD')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--app-text-muted)' }}>Status</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--app-card-border)' }}>
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j} className="px-4 py-3"><div className="h-4 rounded animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} /></td>
                     ))}
                   </tr>
                 ))
               ) : parts.map(part => {
-                const stock = getStockStatus(part.quantity, part.min_quantity)
                 const isAlt = part.part_number.endsWith('-ALT1') || part.part_number.endsWith('-ALT2')
                 const catColor = categoryBadgeColors[part.category ?? ''] ?? 'bg-gray-100 text-gray-700'
                 return (
@@ -305,11 +260,8 @@ export function SparesView() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
-                          <span className={`font-bold font-mono text-base cursor-pointer hover:underline ${
-                            stock.variant === 'destructive' ? 'text-red-600' :
-                            stock.variant === 'warning' ? 'text-amber-600' : ''
-                          }`}
-                          style={stock.variant === 'success' ? { color: 'var(--app-text)' } : {}}
+                          <span className="font-bold font-mono text-base cursor-pointer hover:underline"
+                          style={{ color: 'var(--app-text)' }}
                           onClick={(e) => { e.stopPropagation(); setEditingId(part.id); setEditQty(part.quantity) }}
                           title="Click to edit"
                           >
@@ -322,12 +274,8 @@ export function SparesView() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>{part.min_quantity}</td>
                     <td className="px-4 py-3 font-mono hidden lg:table-cell" style={{ color: 'var(--app-text-muted)' }}>
                       {part.unit_cost > 0 ? `${part.unit_cost.toFixed(2)} KWD` : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={stock.variant} className="text-xs">{stock.label}</Badge>
                     </td>
                   </tr>
                 )
@@ -389,7 +337,7 @@ export function SparesView() {
                 <div>
                   <Label className="text-xs" style={{ color: 'var(--app-text-muted)' }}>Stock</Label>
                   <p className="text-sm font-mono" style={{ color: 'var(--app-text)' }}>
-                    {detailPart.quantity} / min {detailPart.min_quantity}
+                    {detailPart.quantity} {detailPart.unit}
                   </p>
                 </div>
               </div>

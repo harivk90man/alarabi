@@ -47,22 +47,22 @@ export default function AuditPage() {
     <AppShell>
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Audit Log</h1>
-          <p className="text-gray-500 text-sm mt-1">All system actions — newest first</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Audit Log</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>All system actions — newest first</p>
         </div>
 
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />
+              <div key={i} className="h-14 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+          <div className="rounded-lg border" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
             {logs.length === 0 ? (
-              <p className="text-center py-12 text-gray-400">No audit entries yet</p>
+              <p className="text-center py-12" style={{ color: 'var(--app-text-muted)' }}>No audit entries yet</p>
             ) : logs.map(log => (
-              <div key={log.id} className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50">
+              <div key={log.id} className="flex items-start gap-4 px-4 py-3 border-b last:border-b-0" style={{ borderColor: 'var(--app-card-border)' }}>
                 <div className="flex-shrink-0 mt-0.5">
                   <span
                     className="inline-block px-2 py-0.5 rounded text-xs font-mono font-medium text-white"
@@ -73,26 +73,26 @@ export default function AuditPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-gray-800">
+                    <span className="font-medium" style={{ color: 'var(--app-text)' }}>
                       {(log.operator as { name: string } | null)?.name ?? 'System'}
                     </span>
                     {log.entity_type && (
                       <>
-                        <span className="text-gray-400">·</span>
-                        <span className="text-gray-500 capitalize">{log.entity_type}</span>
+                        <span style={{ color: 'var(--app-text-muted)' }}>·</span>
+                        <span className="capitalize" style={{ color: 'var(--app-text-muted)' }}>{log.entity_type}</span>
                         {log.entity_id && (
-                          <span className="font-mono text-xs text-gray-400">{log.entity_id.substring(0, 8)}…</span>
+                          <span className="font-mono text-xs" style={{ color: 'var(--app-text-muted)' }}>{log.entity_id.substring(0, 8)}…</span>
                         )}
                       </>
                     )}
                   </div>
                   {log.details && Object.keys(log.details).length > 0 && (
-                    <div className="text-xs text-gray-400 font-mono mt-0.5 truncate">
+                    <div className="text-xs font-mono mt-0.5 truncate" style={{ color: 'var(--app-text-muted)' }}>
                       {JSON.stringify(log.details)}
                     </div>
                   )}
                 </div>
-                <div className="flex-shrink-0 text-xs font-mono text-gray-400 text-right whitespace-nowrap">
+                <div className="flex-shrink-0 text-xs font-mono text-right whitespace-nowrap" style={{ color: 'var(--app-text-muted)' }}>
                   {formatDateTime(log.created_at)}
                 </div>
               </div>
