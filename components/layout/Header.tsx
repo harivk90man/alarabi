@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { LogOut, User, Menu } from 'lucide-react'
+import { LogOut, User, Menu, Globe } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,7 @@ interface Props {
 
 export function Header({ onMenuClick }: Props) {
   const { user, logout } = useAuth()
-  const { t } = useLanguage()
+  const { lang, setLang, t } = useLanguage()
   const [counts, setCounts] = useState({ machines: 0, operators: 0 })
 
   useEffect(() => {
@@ -35,6 +35,8 @@ export function Header({ onMenuClick }: Props) {
     : user?.role === 'technician'
     ? t('technician')
     : t('operator')
+
+  const toggleLang = () => setLang(lang === 'en' ? 'ar' : 'en')
 
   return (
     <header
@@ -71,10 +73,10 @@ export function Header({ onMenuClick }: Props) {
 
         <div className="flex-1" />
 
-        {/* User info + theme + logout */}
+        {/* User info + language + theme + logout */}
         {user && (
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className="hidden sm:flex items-center gap-2 mr-1">
               <User className="w-4 h-4 text-white/60 flex-shrink-0" />
               <span className="text-white text-sm font-medium truncate max-w-[120px]">{user.name}</span>
               <Badge
@@ -85,7 +87,22 @@ export function Header({ onMenuClick }: Props) {
               </Badge>
               <span className="text-white/40 font-mono text-xs flex-shrink-0">#{user.id}</span>
             </div>
+
+            {/* Language toggle */}
+            <button
+              onClick={toggleLang}
+              className="text-white/70 hover:text-white p-1.5 rounded transition-colors hover:bg-white/10 flex-shrink-0 flex items-center gap-1"
+              aria-label="Toggle language"
+              title={lang === 'en' ? 'العربية' : 'English'}
+            >
+              <Globe className="w-4 h-4" />
+              <span className="text-[10px] font-semibold uppercase">{lang === 'en' ? 'AR' : 'EN'}</span>
+            </button>
+
+            {/* Theme picker */}
             <ThemePicker />
+
+            {/* Logout */}
             <Button
               variant="ghost"
               size="sm"
