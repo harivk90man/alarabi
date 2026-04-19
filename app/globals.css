@@ -81,10 +81,16 @@
     --brand-primary-600:  #12315a;
     --brand-accent:       #1d4ed8;
     --brand-accent-hover: #1e40af;
+    --primary: 224 76% 48%;
+    --accent: 224 76% 48%;
+    --ring: 224 76% 48%;
   }
   [data-accent="navy"].dark, .dark {
     --brand-primary:      #0a1929;
     --brand-accent:       #3b82f6;
+    --primary: 217 91% 60%;
+    --accent: 217 91% 60%;
+    --ring: 217 91% 60%;
   }
 
   /* ── Accent: Blue ───────────────────────────────────────── */
@@ -93,10 +99,16 @@
     --brand-primary-600:  #1e40af;
     --brand-accent:       #3b82f6;
     --brand-accent-hover: #2563eb;
+    --primary: 217 91% 60%;
+    --accent: 217 91% 60%;
+    --ring: 217 91% 60%;
   }
   [data-accent="blue"].dark {
     --brand-primary:      #1e293b;
     --brand-accent:       #60a5fa;
+    --primary: 213 94% 68%;
+    --accent: 213 94% 68%;
+    --ring: 213 94% 68%;
   }
 
   /* ── Accent: Green ──────────────────────────────────────── */
@@ -105,10 +117,16 @@
     --brand-primary-600:  #065f46;
     --brand-accent:       #10b981;
     --brand-accent-hover: #059669;
+    --primary: 160 84% 39%;
+    --accent: 160 84% 39%;
+    --ring: 160 84% 39%;
   }
   [data-accent="green"].dark {
     --brand-primary:      #022c22;
     --brand-accent:       #34d399;
+    --primary: 160 64% 52%;
+    --accent: 160 64% 52%;
+    --ring: 160 64% 52%;
   }
 
   /* ── Accent: Purple ─────────────────────────────────────── */
@@ -117,10 +135,16 @@
     --brand-primary-600:  #5b21b6;
     --brand-accent:       #8b5cf6;
     --brand-accent-hover: #7c3aed;
+    --primary: 258 90% 66%;
+    --accent: 258 90% 66%;
+    --ring: 258 90% 66%;
   }
   [data-accent="purple"].dark {
     --brand-primary:      #2e1065;
     --brand-accent:       #a78bfa;
+    --primary: 258 90% 76%;
+    --accent: 258 90% 76%;
+    --ring: 258 90% 76%;
   }
 
   /* ── Accent: Rose ───────────────────────────────────────── */
@@ -129,10 +153,16 @@
     --brand-primary-600:  #9f1239;
     --brand-accent:       #f43f5e;
     --brand-accent-hover: #e11d48;
+    --primary: 350 89% 60%;
+    --accent: 350 89% 60%;
+    --ring: 350 89% 60%;
   }
   [data-accent="rose"].dark {
     --brand-primary:      #4c0519;
     --brand-accent:       #fb7185;
+    --primary: 350 91% 72%;
+    --accent: 350 91% 72%;
+    --ring: 350 91% 72%;
   }
 
   /* ── Accent: Orange ─────────────────────────────────────── */
@@ -141,10 +171,16 @@
     --brand-primary-600:  #9a3412;
     --brand-accent:       #f97316;
     --brand-accent-hover: #ea580c;
+    --primary: 25 95% 53%;
+    --accent: 25 95% 53%;
+    --ring: 25 95% 53%;
   }
   [data-accent="orange"].dark {
     --brand-primary:      #431407;
     --brand-accent:       #fb923c;
+    --primary: 27 96% 61%;
+    --accent: 27 96% 61%;
+    --ring: 27 96% 61%;
   }
 
   * {
