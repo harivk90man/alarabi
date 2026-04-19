@@ -230,7 +230,7 @@ export function SparesView() {
                 ))
               ) : parts.map(part => {
                 const isAlt = part.part_number.endsWith('-ALT1') || part.part_number.endsWith('-ALT2')
-                const catColor = categoryBadgeColors[part.category ?? ''] ?? 'bg-gray-100 text-gray-700'
+                const catColor = categoryBadgeColors[part.category ?? ''] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                 return (
                   <tr key={part.id} className="hover:bg-[var(--app-nav-hover)] cursor-pointer" onClick={() => { setDetailPart(part); setEditCost(part.unit_cost.toFixed(4)) }}>
                     <td className="px-4 py-3">

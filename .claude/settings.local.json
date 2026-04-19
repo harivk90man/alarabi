@@ -9,7 +9,9 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://alarabi.vercel.app/)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(grep -c \"placeholder\" .next/static/chunks/app/spares/*.js)",
+      "Bash(grep -c \"searchParts\" .next/static/chunks/app/spares/*.js)"
     ]
   }
 }

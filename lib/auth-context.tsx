@@ -22,17 +22,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Restore session from localStorage
-    try {
-      const stored = localStorage.getItem(SESSION_KEY)
-      if (stored) {
+    // Restore session from localStorage, then re-validate against DB
+    async function restoreSession() {
+      try {
+        const stored = localStorage.getItem(SESSION_KEY)
+        if (!stored) { setLoading(false); return }
+
         const parsed = JSON.parse(stored) as Operator
-        setUser(parsed)
+
+        // Re-fetch from DB to get current role/active status
+        const { data: fresh } = await supabase
+          .from('operators')
+          .select('*')
+          .eq('id', parsed.id)
+          .single()
+
+        if (!fresh || !fresh.is_active) {
+          // User deleted or deactivated since last login
+          localStorage.removeItem(SESSION_KEY)
+          setLoading(false)
+          return
+        }
+
+        // Update session with fresh data (role may have changed)
+        setUser(fresh)
+        localStorage.setItem(SESSION_KEY, JSON.stringify(fresh))
+      } catch {
+        localStorage.removeItem(SESSION_KEY)
       }
-    } catch {
-      localStorage.removeItem(SESSION_KEY)
+      setLoading(false)
     }
-    setLoading(false)
+    restoreSession()
   }, [])
 
   const login = async (badgeId: string): Promise<{ error: string | null }> => {

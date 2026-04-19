@@ -1,0 +1,232 @@
+# Claude Code — Forensic Fix (stop guessing, verify)
+
+## YOU WERE WRONG THREE TIMES. DO IT DIFFERENTLY.
+
+You have claimed these fixes were done. Live browser inspection of production proves they are NOT done:
+
+| What you claimed | What's actually in the DOM |
+|---|---|
+| "Technician can see Spare Parts (line 98 of sidebar)" | Douvan's sidebar renders only: Dashboard, My Work Orders, Machines, Settings. NO Spare Parts link. |
+| "Search box IS in the code (SparesView.tsx 136–143)" | `document.querySelectorAll('input').length === 0` on `/machines`. The `<input>` element does not exist in rendered HTML anywhere. |
+| "Dark mode hardcoded colors fixed" | Table on `/machines` still has `background-color: rgb(255,255,255)` via `.bg-white` class winning over `var(--app-bg)`. |
+
+**Stop reading source files and declaring victory.** Source files you read may not be the files being rendered. Today you will prove every fix by inspecting the actual compiled output.
+
+---
+
+## STEP 1 — FIND WHAT'S ACTUALLY RENDERING
+
+Before changing any code, answer these questions by searching the repo:
+
+### Question 1: What sidebar component is actually mounted?
+
+```bash
+# List every file that might define a sidebar
+grep -rln "Dashboard.*My Work Orders" --include="*.tsx" --include="*.ts" .
+grep -rln "technicianNav\|operatorNav\|adminNav" --include="*.tsx" --include="*.ts" .
+grep -rln "from.*[Ss]idebar" --include="*.tsx" --include="*.ts" .
+```
+
+If more than one file appears, **find which one is actually imported by `app/layout.tsx`** (or the layout that wraps authenticated routes). That's the real sidebar. The others are dead code or leftovers.
+
+Output the filename you determined is the real sidebar. Write it in the commit message.
+
+### Question 2: What spares page is actually mounted?
+
+```bash
+# What does the /spares route render?
+ls -la app/spares/
+cat app/spares/page.tsx
+
+# Is SparesView actually imported anywhere?
+grep -rn "SparesView" --include="*.tsx" --include="*.ts" .
+```
+
+If `SparesView.tsx` exists but `app/spares/page.tsx` does NOT import it, then SparesView is dead code. The page that actually renders is `app/spares/page.tsx`. Fix the real one.
+
+### Question 3: Why does `document.querySelectorAll('input').length === 0` on `/machines`?
+
+The Machines page visibly shows a "Search by ID, name, model, manufacturer..." field, but it's NOT an `<input>` element. This is a rendering bug. Inspect the component and find out whether it's:
+- A `<div>` styled to look like an input (broken)
+- A shadcn `Input` that isn't actually rendering
+- A `contentEditable` element (wrong component type)
+
+Same applies to `/spares` — figure out why no input is in the DOM.
+
+---
+
+## STEP 2 — FIX THE REAL FILES
+
+Now that you know which files ACTUALLY render:
+
+### Fix A: Technician sidebar
+
+In the real sidebar component, add Spare Parts to the technician nav array. Example (adapt to actual code style):
+
+```ts
+const technicianNav = [
+  { href: '/dashboard', label: 'Dashboard', icon: Dashboard },
+  { href: '/my-issues', label: 'My Work Orders', icon: Wrench },
+  { href: '/machines', label: 'Machines', icon: Settings },
+  { href: '/spares', label: 'Spare Parts', icon: Package },   // ADD THIS
+  { href: '/settings', label: 'Settings', icon: Cog },
+];
+```
+
+Note: technicians should see spare parts per the brief's RBAC table (they consume parts when resolving issues). But they should NOT see Reports, Operators, or Audit Log.
+
+### Fix B: Search bar on /spares (and /machines)
+
+Open the actual component rendered at `/spares`. Add a real `<input>` element (not a styled div). Use the shadcn `Input` component or a plain `<input type="search">`:
+
+```tsx
+<input
+  type="search"
+  placeholder="Search parts..."
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="w-full ..."
+/>
+```
+
+Same for `/machines` if that's also fake.
+
+### Fix C: Dark mode white table
+
+The DevTools finding: `.bg-white` is winning on the table container, giving it `rgb(255,255,255)`. Find every occurrence:
+
+```bash
+grep -rn "bg-white" --include="*.tsx" --include="*.ts" app/ components/
+```
+
+Replace each with either:
+- `bg-card` (or whatever your theme token is — check `tailwind.config.ts`)
+- `bg-white dark:bg-slate-900` (explicit dark variant)
+- `bg-[var(--app-card)]` if you're using CSS vars
+
+Also grep for these common offenders and fix:
+```bash
+grep -rn "bg-gray-50\|bg-gray-100\|text-gray-900\|border-gray-200" --include="*.tsx" .
+```
+
+### Fix D: Supabase Realtime WebSocket auth failure
+
+Console shows:
+```
+WebSocket connection to 'wss://ncftgfhbhklzuuyltqlw.supabase.co/realtime/v1/websocket?apikey=...' failed: HTTP Authentication failed; no valid credentials available
+```
+
+This is a separate real bug. The apikey in the WebSocket URL is being passed incorrectly. Check:
+- Is `NEXT_PUBLIC_SUPABASE_ANON_KEY` correctly set in Vercel env vars?
+- Is the Supabase client being initialized with the key?
+- Did an old apikey get cached?
+
+Either fix it or document that realtime is temporarily disabled (then remove the realtime subscription code so the console isn't spammed).
+
+---
+
+## STEP 3 — PROVE IT WORKS (before commit)
+
+For EACH fix above, run a command that outputs evidence it's fixed. Don't just eyeball source files.
+
+```bash
+npm run build
+npm run dev &  # background
+sleep 10
+```
+
+Then either use a headless browser or curl + grep to verify:
+
+```bash
+# Fetch the built spares page
+curl -sL http://localhost:3000/spares > /tmp/spares.html
+
+# Prove the search input exists
+grep -c '<input[^>]*type="search"' /tmp/spares.html   # should output >= 1
+grep -c 'placeholder="Search' /tmp/spares.html        # should output >= 1
+
+# Prove technician nav includes spares (search the compiled JS for the string)
+grep -rn "Spare Parts" .next/static/ | head -3
+
+# Prove no stray bg-white on tables
+grep -n "bg-white" app/spares/page.tsx || echo "OK - no bg-white"
+```
+
+If any check returns empty or zero, **the fix is not done**. Loop and fix until all checks pass.
+
+Kill the dev server:
+```bash
+pkill -f "next dev" || true
+```
+
+---
+
+## STEP 4 — COMMIT AND VERIFY PRODUCTION
+
+```bash
+git add -A
+git commit -m "Actually fix sidebar/search/dark-mode issues
+
+After three failed runs, identified root causes:
+- The rendered sidebar component was <FILL IN ACTUAL FILE> not what I edited before
+- Search bar was a styled div, not a real <input> element
+- bg-white class was winning over --app-bg on <FILL IN COMPONENT> tables
+
+Verified locally via grep on compiled output, not by reading source.
+
+Fixes:
+- Sidebar: technicians now see /spares link
+- Spares + Machines: real <input type=search> elements rendered
+- Dark mode: replaced remaining bg-white with theme tokens
+- Realtime: <fixed OR disabled, state which>"
+git push origin main
+```
+
+Then WAIT for Vercel to deploy (~2 min), and verify production:
+
+```bash
+# Wait for deploy
+sleep 120
+
+# Fetch actual production HTML (no cache)
+curl -sL "https://alarabi-maintenance-tracker.vercel.app/spares?t=$(date +%s)" > /tmp/prod.html
+
+# Final proof:
+echo "Search inputs found: $(grep -c '<input[^>]*search' /tmp/prod.html)"
+echo "Spare Parts in nav: $(grep -c 'Spare Parts' /tmp/prod.html)"
+echo "bg-white remaining: $(grep -c 'bg-white' /tmp/prod.html)"
+```
+
+If production checks fail, the issue is Vercel config, not code. Check `vercel inspect` and the Vercel dashboard to confirm the deployment actually used the latest commit SHA.
+
+---
+
+## FINAL OUTPUT — REQUIRED
+
+Report back with this exact format. No prose narratives. No "it should work now."
+
+```
+REAL SIDEBAR FILE: <path>
+REAL SPARES PAGE FILE: <path>
+DEAD CODE FOUND: <list of files that exist but aren't imported>
+
+COMMITS PUSHED:
+- <sha1>: <message>
+
+LOCAL VERIFICATION (from grep on .next/):
+  Search input in spares: PASS/FAIL
+  Spare Parts nav link:   PASS/FAIL
+  bg-white occurrences:   <count>
+  Build succeeded:        PASS/FAIL
+
+PRODUCTION VERIFICATION (from curl of vercel URL, after waiting 2min):
+  Search input in HTML:   PASS/FAIL
+  Spare Parts in HTML:    PASS/FAIL
+  Deploy SHA matches:     PASS/FAIL
+
+REALTIME WEBSOCKET: FIXED / DISABLED / STILL BROKEN
+
+If any line says FAIL: do not claim done. Keep fixing.
+```
+
+Go.

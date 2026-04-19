@@ -118,7 +118,7 @@ export function Sidebar({ open, onClose }: Props) {
             href={href}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-              active ? 'bg-[#1d4ed8] text-white' : 'hover:text-gray-900'
+              active ? 'bg-[#1d4ed8] text-white' : ''
             )}
             style={active ? {} : { color: 'var(--app-text-muted)' }}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--app-nav-hover)' }}
