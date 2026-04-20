@@ -2,8 +2,9 @@
 
 import { useTheme, ACCENTS } from '@/lib/theme-context'
 import { useLanguage } from '@/lib/language-context'
-import { Sun, Moon, Globe, Check, Palette } from 'lucide-react'
+import { Sun, Moon, Globe, Check, Palette, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 export function SettingsView() {
   const { mode, accent, setMode, setAccent } = useTheme()
@@ -11,13 +12,16 @@ export function SettingsView() {
 
   return (
     <div className="space-y-6 max-w-xl">
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>{t('settings')}</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{t('settingsDesc')}</p>
-      </div>
+      <PageHeader icon={Settings} title={t('settings')} subtitle={t('settingsDesc')} />
 
       {/* Appearance */}
-      <div className="rounded-lg border p-5 space-y-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <div
+        className="rounded-xl p-5 space-y-5"
+        style={{
+          backgroundColor: 'var(--app-card)',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        }}
+      >
         <div className="flex items-center gap-2">
           <Palette className="w-4 h-4" style={{ color: 'var(--app-text-muted)' }} />
           <h2 className="text-sm font-semibold" style={{ color: 'var(--app-text)' }}>{t('themeAppearance')}</h2>
@@ -29,7 +33,7 @@ export function SettingsView() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setMode('light')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:shadow-md"
               style={{
                 borderColor: mode === 'light' ? 'var(--brand-accent)' : 'var(--app-card-border)',
                 backgroundColor: mode === 'light' ? 'var(--brand-accent)' : 'var(--app-card)',
@@ -41,7 +45,7 @@ export function SettingsView() {
             </button>
             <button
               onClick={() => setMode('dark')}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:shadow-md"
               style={{
                 borderColor: mode === 'dark' ? 'var(--brand-accent)' : 'var(--app-card-border)',
                 backgroundColor: mode === 'dark' ? 'var(--brand-accent)' : 'var(--app-card)',
@@ -62,14 +66,14 @@ export function SettingsView() {
               <button
                 key={a.value}
                 onClick={() => setAccent(a.value)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all hover:shadow-md"
                 style={{
                   borderColor: accent === a.value ? a.color : 'var(--app-card-border)',
                   backgroundColor: 'var(--app-card)',
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                   style={{ backgroundColor: a.color }}
                 >
                   {accent === a.value && <Check className="w-5 h-5 text-white" />}
@@ -85,7 +89,7 @@ export function SettingsView() {
         {/* Live Preview */}
         <div>
           <p className="text-xs font-medium mb-2" style={{ color: 'var(--app-text-muted)' }}>{t('themePreview')}</p>
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--app-card-border)' }}>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--app-card-border)' }}>
             <div className="h-10 flex items-center px-4 gap-2" style={{ backgroundColor: 'var(--brand-primary)' }}>
               <div className="w-16 h-4 rounded bg-white/20" />
               <div className="flex-1" />
@@ -103,7 +107,13 @@ export function SettingsView() {
       </div>
 
       {/* Language */}
-      <div className="rounded-lg border p-5 space-y-3" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <div
+        className="rounded-xl p-5 space-y-3"
+        style={{
+          backgroundColor: 'var(--app-card)',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        }}
+      >
         <div className="flex items-center gap-2 mb-1">
           <Globe className="w-4 h-4" style={{ color: 'var(--app-text-muted)' }} />
           <h2 className="text-sm font-semibold" style={{ color: 'var(--app-text)' }}>{t('language')} / اللغة</h2>
@@ -111,7 +121,7 @@ export function SettingsView() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setLang('en')}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:shadow-md"
             style={{
               borderColor: lang === 'en' ? 'var(--brand-accent)' : 'var(--app-card-border)',
               backgroundColor: lang === 'en' ? 'var(--brand-accent)' : 'var(--app-card)',
@@ -123,7 +133,7 @@ export function SettingsView() {
           </button>
           <button
             onClick={() => setLang('ar')}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all hover:shadow-md"
             style={{
               borderColor: lang === 'ar' ? 'var(--brand-accent)' : 'var(--app-card-border)',
               backgroundColor: lang === 'ar' ? 'var(--brand-accent)' : 'var(--app-card)',
@@ -135,7 +145,7 @@ export function SettingsView() {
           </button>
         </div>
         {lang === 'ar' && (
-          <p className="text-xs px-3 py-2 rounded border" style={{ color: '#b45309', backgroundColor: '#fffbeb', borderColor: '#fcd34d' }}>
+          <p className="text-xs px-3 py-2 rounded-lg border" style={{ color: '#b45309', backgroundColor: '#fffbeb', borderColor: '#fcd34d' }}>
             الترجمة متاحة للقائمة الجانبية والعناوين الرئيسية
           </p>
         )}

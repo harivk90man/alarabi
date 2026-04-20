@@ -8,7 +8,25 @@ interface CategoryStat {
   total: number
   running: number
   down: number
+  maintenance: number
   pct: number
+}
+
+function MiniRing({ pct, color, size = 28 }: { pct: number; color: string; size?: number }) {
+  const r = (size - 4) / 2
+  const circ = 2 * Math.PI * r
+  const offset = circ - (pct / 100) * circ
+  return (
+    <svg width={size} height={size} className="-rotate-90 flex-shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--app-nav-hover)" strokeWidth="3" />
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        fill="none" stroke={color} strokeWidth="3" strokeLinecap="round"
+        strokeDasharray={circ} strokeDashoffset={offset}
+        className="transition-all duration-1000 ease-out"
+      />
+    </svg>
+  )
 }
 
 export function CategoryHealth() {
@@ -16,21 +34,22 @@ export function CategoryHealth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetch() {
+    async function load() {
       const { data } = await supabase
         .from('machines')
         .select('status, categories(name)')
 
       if (!data) return
 
-      const map: Record<string, { total: number; running: number; down: number }> = {}
+      const map: Record<string, { total: number; running: number; down: number; maintenance: number }> = {}
       for (const m of data) {
         const catRaw = m.categories as unknown
         const cat = (Array.isArray(catRaw) ? catRaw[0]?.name : (catRaw as { name: string } | null)?.name) ?? 'Unknown'
-        if (!map[cat]) map[cat] = { total: 0, running: 0, down: 0 }
+        if (!map[cat]) map[cat] = { total: 0, running: 0, down: 0, maintenance: 0 }
         map[cat].total++
         if (m.status === 'Running') map[cat].running++
         if (m.status === 'Down') map[cat].down++
+        if (m.status === 'Maintenance') map[cat].maintenance++
       }
 
       const result = Object.entries(map)
@@ -39,6 +58,7 @@ export function CategoryHealth() {
           total: v.total,
           running: v.running,
           down: v.down,
+          maintenance: v.maintenance,
           pct: v.total > 0 ? Math.round((v.running / v.total) * 100) : 100,
         }))
         .sort((a, b) => a.pct - b.pct)
@@ -46,36 +66,100 @@ export function CategoryHealth() {
       setStats(result)
       setLoading(false)
     }
-    fetch()
+    load()
   }, [])
 
   if (loading) {
-    return <div className="h-48 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
+    return (
+      <div
+        className="rounded-xl p-6 animate-pulse"
+        style={{
+          backgroundColor: 'var(--app-card)',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05)',
+          minHeight: '280px',
+        }}
+      />
+    )
   }
 
   return (
-    <div className="rounded-lg border p-5"
-      style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
-      <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Category Health</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {stats.map(({ name, down, pct }) => {
-          const barColor = pct === 100 ? '#16a34a' : pct >= 80 ? '#b45309' : '#dc2626'
+    <div
+      className="rounded-xl p-6"
+      style={{
+        backgroundColor: 'var(--app-card)',
+        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+      }}
+    >
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--app-text)' }}>
+            Category Health
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+            Machine status by production line
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-[11px]" style={{ color: 'var(--app-text-muted)' }}>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#22c55e]" /> Running</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b]" /> Maint.</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444]" /> Down</span>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {stats.map(({ name, total, running, down, maintenance, pct }, idx) => {
+          const statusColor = pct === 100 ? '#22c55e' : pct >= 80 ? '#f59e0b' : '#ef4444'
+          const runPct = total > 0 ? (running / total) * 100 : 0
+          const maintPct = total > 0 ? (maintenance / total) * 100 : 0
+          const downPct = total > 0 ? (down / total) * 100 : 0
+
           return (
-            <div key={name} className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-medium truncate" style={{ color: 'var(--app-text)' }}>{name}</span>
-                <span className="text-xs font-mono ml-2" style={{ color: 'var(--app-text-muted)' }}>{pct}%</span>
+            <div
+              key={name}
+              className="animate-in fade-in slide-in-from-left-2 duration-500 [animation-fill-mode:backwards]"
+              style={{ animationDelay: `${idx * 60}ms` }}
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2.5">
+                  <MiniRing pct={pct} color={statusColor} />
+                  <div>
+                    <span className="text-sm font-medium" style={{ color: 'var(--app-text)' }}>{name}</span>
+                    <span className="text-[11px] font-mono ml-1.5" style={{ color: 'var(--app-text-muted)' }}>
+                      ({total})
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {down > 0 && (
+                    <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500">
+                      {down} down
+                    </span>
+                  )}
+                  <span className="text-sm font-bold font-mono w-10 text-right tabular-nums" style={{ color: statusColor }}>
+                    {pct}%
+                  </span>
+                </div>
               </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%`, backgroundColor: barColor }}
-                />
-              </div>
-              <div className="text-xs" style={{ color: 'var(--app-text-muted)' }}>
-                {pct}% operational
-                {down > 0 && (
-                  <span className="text-red-500 ml-1">· {down} down</span>
+
+              {/* Stacked bar */}
+              <div className="h-2 rounded-full overflow-hidden flex" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
+                {runPct > 0 && (
+                  <div
+                    className="h-full transition-all duration-1000 ease-out"
+                    style={{ width: `${runPct}%`, backgroundColor: '#22c55e' }}
+                  />
+                )}
+                {maintPct > 0 && (
+                  <div
+                    className="h-full transition-all duration-1000 ease-out"
+                    style={{ width: `${maintPct}%`, backgroundColor: '#f59e0b' }}
+                  />
+                )}
+                {downPct > 0 && (
+                  <div
+                    className="h-full transition-all duration-1000 ease-out"
+                    style={{ width: `${downPct}%`, backgroundColor: '#ef4444' }}
+                  />
                 )}
               </div>
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Cpu, AlertTriangle, Wrench, AlertCircle, Activity, Clock } from 'lucide-react'
 import { formatDuration } from '@/lib/format'
@@ -13,6 +13,28 @@ interface KpiData {
   minorIssue: number
   openIssues: number
   downtime7d: number
+}
+
+function AnimatedNumber({ value, duration = 1200 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0)
+  const raf = useRef<number>(0)
+
+  useEffect(() => {
+    cancelAnimationFrame(raf.current)
+    if (value === 0) { setDisplay(0); return }
+    let start: number | null = null
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const p = Math.min((ts - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setDisplay(Math.round(eased * value))
+      if (p < 1) raf.current = requestAnimationFrame(step)
+    }
+    raf.current = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf.current)
+  }, [value, duration])
+
+  return <>{display}</>
 }
 
 export function KpiCards() {
@@ -50,7 +72,6 @@ export function KpiCards() {
     }
     fetch()
 
-    // Realtime subscription for live updates
     const channel = supabase
       .channel('kpi-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'machines' }, fetch)
@@ -60,99 +81,128 @@ export function KpiCards() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
+  const totalMachines = data.running + data.down + data.maintenance + data.minorIssue
+
   const cards = [
     {
       label: 'Running',
       value: data.running,
       icon: Cpu,
-      color: '#16a34a',
-      bg: '#f0fdf4',
-      border: '#86efac',
-      live: true,
+      color: '#22c55e',
+      borderColor: '#22c55e',
+      subtitle: totalMachines > 0 ? `${Math.round((data.running / totalMachines) * 100)}% of fleet` : '',
     },
     {
       label: 'Down',
       value: data.down,
       icon: AlertTriangle,
-      color: '#dc2626',
-      bg: '#fef2f2',
-      border: '#fca5a5',
-      pulse: true,
-      live: true,
+      color: '#ef4444',
+      borderColor: '#ef4444',
+      pulse: data.down > 0,
+      urgent: data.down > 0,
+      subtitle: data.down > 0 ? 'Needs attention' : 'All clear',
     },
     {
       label: 'Maintenance',
       value: data.maintenance,
       icon: Wrench,
-      color: '#b45309',
-      bg: '#fffbeb',
-      border: '#fcd34d',
-      live: true,
+      color: '#f59e0b',
+      borderColor: '#f59e0b',
+      subtitle: 'Scheduled service',
     },
     {
       label: 'Minor Issues',
       value: data.minorIssue,
       icon: AlertCircle,
-      color: '#1d4ed8',
-      bg: '#eff6ff',
-      border: '#93c5fd',
-      live: true,
+      color: '#3b82f6',
+      borderColor: '#3b82f6',
+      subtitle: 'Non-critical',
     },
     {
       label: 'Open Issues',
       value: data.openIssues,
       icon: Activity,
-      color: '#7c3aed',
-      bg: '#f5f3ff',
-      border: '#c4b5fd',
-      live: true,
+      color: '#8b5cf6',
+      borderColor: '#8b5cf6',
+      subtitle: 'Awaiting resolution',
     },
     {
-      label: 'Downtime 7d',
+      label: 'Downtime (7d)',
       value: formatDuration(data.downtime7d),
       icon: Clock,
-      color: '#dc2626',
-      bg: '#fef2f2',
-      border: '#fca5a5',
+      color: '#ef4444',
+      borderColor: '#ef4444',
       isText: true,
+      subtitle: 'Total breakdown time',
     },
   ]
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-24 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-card)' }} />
+          <div
+            key={i}
+            className="h-[130px] rounded-xl animate-pulse"
+            style={{ backgroundColor: 'var(--app-card)' }}
+          />
         ))}
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      {cards.map(({ label, value, icon: Icon, color, bg, border, pulse, isText, live }: any) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {cards.map(({ label, value, icon: Icon, color, borderColor, pulse, isText, subtitle, urgent }: any, idx: number) => (
         <div
           key={label}
-          className="rounded-lg border p-4 flex flex-col gap-2"
-          style={{ backgroundColor: bg, borderColor: border }}
+          className="rounded-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group animate-in fade-in slide-in-from-bottom-3 duration-500 [animation-fill-mode:backwards]"
+          style={{
+            backgroundColor: 'var(--app-card)',
+            borderLeft: `3px solid ${borderColor}`,
+            boxShadow: urgent
+              ? `0 0 0 1px ${color}25, 0 4px 16px ${color}15`
+              : '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+            animationDelay: `${idx * 80}ms`,
+          }}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>{label}</span>
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center ${pulse ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: color + '20' }}
-            >
-              <Icon className="w-3.5 h-3.5" style={{ color }} />
+          {/* Subtle gradient overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.04] group-hover:opacity-[0.08] transition-opacity"
+            style={{ background: `linear-gradient(135deg, ${color}, transparent 60%)` }}
+          />
+
+          <div className="relative p-4 flex flex-col justify-between min-h-[130px]">
+            {/* Header: label + icon */}
+            <div className="flex items-start justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>
+                {label}
+              </span>
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${pulse ? 'animate-pulse' : ''}`}
+                style={{ backgroundColor: color + '12' }}
+              >
+                <Icon className="w-4.5 h-4.5" style={{ color }} />
+              </div>
             </div>
-          </div>
-          <div className="flex items-center">
-            <span
-              className={`font-bold ${isText ? 'text-lg' : 'text-3xl'}`}
-              style={{ color }}
-            >
-              {value}
-            </span>
-            {live && <LivePulseDot />}
+
+            {/* Value */}
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className={`font-bold leading-none tracking-tight ${isText ? 'text-xl' : 'text-3xl'}`}
+                  style={{ color }}
+                >
+                  {isText ? value : <AnimatedNumber value={value} duration={1200 + idx * 100} />}
+                </span>
+                <LivePulseDot />
+              </div>
+              {subtitle && (
+                <p className="text-[11px] mt-2 font-medium" style={{ color: 'var(--app-text-muted)' }}>
+                  {subtitle}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       ))}

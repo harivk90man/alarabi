@@ -28,10 +28,10 @@ interface Props {
 }
 
 const statusMap: Record<string, { label: string; color: string }> = {
-  'Running': { label: 'Running', color: '#16a34a' },
-  'Down': { label: 'Down', color: '#dc2626' },
-  'Maintenance': { label: 'Maintenance', color: '#b45309' },
-  'Minor Issue': { label: 'Minor Issue', color: '#1d4ed8' },
+  'Running': { label: 'Running', color: '#22c55e' },
+  'Down': { label: 'Down', color: '#ef4444' },
+  'Maintenance': { label: 'Maintenance', color: '#f59e0b' },
+  'Minor Issue': { label: 'Minor Issue', color: '#3b82f6' },
 }
 
 const typeVariant: Record<string, 'destructive' | 'warning' | 'info'> = {
@@ -56,16 +56,22 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
   const st = statusMap[machine.status] ?? statusMap['Running']
 
   return (
-    <div className="w-80 xl:w-96 rounded-lg border flex flex-col flex-shrink-0" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+    <div
+      className="w-80 xl:w-96 rounded-xl flex flex-col flex-shrink-0"
+      style={{
+        backgroundColor: 'var(--app-card)',
+        boxShadow: '0 4px 16px -2px rgb(0 0 0 / 0.08), 0 1px 3px -1px rgb(0 0 0 / 0.06)',
+      }}
+    >
       <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--app-card-border)' }}>
-        <div>
+        <div className="flex items-center gap-2.5">
           <span className="font-mono font-bold text-lg" style={{ color: 'var(--app-text)' }}>{machine.id}</span>
-          <div
-            className="inline-block ml-2 px-2 py-0.5 rounded-full text-xs text-white font-medium"
+          <span
+            className="px-2.5 py-1 rounded-lg text-xs text-white font-semibold"
             style={{ backgroundColor: st.color }}
           >
             {st.label}
-          </div>
+          </span>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="w-7 h-7">
           <X className="w-4 h-4" />
@@ -74,20 +80,20 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
 
       <div className="p-4 space-y-3 border-b text-sm" style={{ borderColor: 'var(--app-card-border)' }}>
         <div>
-          <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Name</p>
+          <p className="text-[11px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Name</p>
           <p className="font-medium" style={{ color: 'var(--app-text)' }}>{machine.name}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Model</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Model</p>
             <p className="font-mono text-xs" style={{ color: 'var(--app-text)' }}>{machine.model ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Category</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Category</p>
             <p style={{ color: 'var(--app-text)' }}>{machine.categories?.name ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Manufacturer</p>
+            <p className="text-[11px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--app-text-muted)' }}>Manufacturer</p>
             <p style={{ color: 'var(--app-text)' }}>{machine.manufacturer ?? '—'}</p>
           </div>
         </div>
@@ -107,7 +113,11 @@ export function MachineDetailPanel({ machine, onClose, onLogIssue }: Props) {
         ) : (
           <div className="space-y-2">
             {issues.map(issue => (
-              <div key={issue.id} className="p-2.5 rounded-md text-xs" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
+              <div
+                key={issue.id}
+                className="p-2.5 rounded-lg text-xs transition-colors hover:bg-[var(--app-nav-hover)]"
+                style={{ backgroundColor: 'var(--app-bg)' }}
+              >
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-mono" style={{ color: 'var(--app-text-muted)' }}>{issue.issue_number}</span>
                   <div className="flex gap-1">

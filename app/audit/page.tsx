@@ -6,6 +6,8 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatDateTime } from '@/lib/format'
+import { ScrollText } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 interface AuditRow {
   id: string
@@ -18,13 +20,15 @@ interface AuditRow {
 }
 
 const actionColors: Record<string, string> = {
-  ISSUE_CREATED: '#1d4ed8',
-  ISSUE_RESOLVED: '#16a34a',
-  PART_USED: '#b45309',
-  PART_STOCK_UPDATED: '#7c3aed',
-  MACHINE_STATUS_CHANGED: '#1d4ed8',
-  OPERATOR_LOGIN: '#374151',
-  OPERATOR_LOGOUT: '#6b7280',
+  ISSUE_CREATED: '#3b82f6',
+  ISSUE_RESOLVED: '#22c55e',
+  ISSUE_ASSIGNED: '#8b5cf6',
+  ISSUE_UPDATED: '#f59e0b',
+  PART_USED: '#f59e0b',
+  PART_STOCK_UPDATED: '#8b5cf6',
+  MACHINE_STATUS_CHANGED: '#3b82f6',
+  OPERATOR_LOGIN: '#6b7280',
+  OPERATOR_LOGOUT: '#9ca3af',
 }
 
 export default function AuditPage() {
@@ -45,28 +49,35 @@ export default function AuditPage() {
 
   return (
     <AppShell>
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Audit Log</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>All system actions — newest first</p>
-        </div>
+      <div className="space-y-5">
+        <PageHeader icon={ScrollText} title="Audit Log" subtitle="All system actions — newest first" />
 
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="h-14 rounded-lg animate-pulse" style={{ backgroundColor: 'var(--app-nav-hover)' }} />
+              <div key={i} className="h-14 rounded-xl animate-pulse" style={{ backgroundColor: 'var(--app-card)' }} />
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{
+              backgroundColor: 'var(--app-card)',
+              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+            }}
+          >
             {logs.length === 0 ? (
               <p className="text-center py-12" style={{ color: 'var(--app-text-muted)' }}>No audit entries yet</p>
             ) : logs.map(log => (
-              <div key={log.id} className="flex items-start gap-4 px-4 py-3 border-b last:border-b-0" style={{ borderColor: 'var(--app-card-border)' }}>
+              <div
+                key={log.id}
+                className="flex items-start gap-4 px-5 py-3.5 border-b last:border-b-0 transition-colors hover:bg-[var(--app-nav-hover)]"
+                style={{ borderColor: 'var(--app-card-border)' }}
+              >
                 <div className="flex-shrink-0 mt-0.5">
                   <span
-                    className="inline-block px-2 py-0.5 rounded text-xs font-mono font-medium text-white"
-                    style={{ backgroundColor: actionColors[log.action] ?? '#374151' }}
+                    className="inline-block px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold text-white"
+                    style={{ backgroundColor: actionColors[log.action] ?? '#6b7280' }}
                   >
                     {log.action}
                   </span>
@@ -78,16 +89,18 @@ export default function AuditPage() {
                     </span>
                     {log.entity_type && (
                       <>
-                        <span style={{ color: 'var(--app-text-muted)' }}>·</span>
-                        <span className="capitalize" style={{ color: 'var(--app-text-muted)' }}>{log.entity_type}</span>
+                        <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--app-text-muted)' }} />
+                        <span className="capitalize text-xs" style={{ color: 'var(--app-text-muted)' }}>{log.entity_type}</span>
                         {log.entity_id && (
-                          <span className="font-mono text-xs" style={{ color: 'var(--app-text-muted)' }}>{log.entity_id.substring(0, 8)}…</span>
+                          <span className="font-mono text-xs px-1.5 py-0.5 rounded" style={{ color: 'var(--app-text-muted)', backgroundColor: 'var(--app-nav-hover)' }}>
+                            {log.entity_id.substring(0, 8)}
+                          </span>
                         )}
                       </>
                     )}
                   </div>
                   {log.details && Object.keys(log.details).length > 0 && (
-                    <div className="text-xs font-mono mt-0.5 truncate" style={{ color: 'var(--app-text-muted)' }}>
+                    <div className="text-xs font-mono mt-1 truncate" style={{ color: 'var(--app-text-muted)' }}>
                       {JSON.stringify(log.details)}
                     </div>
                   )}

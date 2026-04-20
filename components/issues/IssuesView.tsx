@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, X, CheckCircle, UserCheck, PlayCircle, AlertTriangle, Wrench, ShieldCheck } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { useLanguage } from '@/lib/language-context'
 import { timeAgo, formatDuration } from '@/lib/format'
 import { logAudit } from '@/lib/audit'
@@ -253,17 +254,13 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
     : 'Issues'
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>{pageTitle}</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{issues.length} issues shown</p>
-        </div>
-        <Button onClick={() => setLogOpen(true)} className="gap-2">
+    <div className="space-y-5">
+      <PageHeader icon={AlertTriangle} title={pageTitle} subtitle={`${issues.length} issues shown`}>
+        <Button onClick={() => setLogOpen(true)} className="gap-2 bg-white/15 hover:bg-white/25 text-white border-0">
           <Plus className="w-4 h-4" />
           {t('logIssue')}
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-lg w-fit overflow-x-auto" style={{ backgroundColor: 'var(--app-nav-hover)' }}>
@@ -292,8 +289,8 @@ export function IssuesView({ filterByUser, filterMode }: Props) {
       ) : (
         <div className="space-y-3">
           {issues.map(issue => (
-            <div key={issue.id} className="rounded-lg border p-4"
-              style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <div key={issue.id} className="rounded-xl p-4"
+              style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)' }}>
 
               {/* Issue header */}
               <div className="flex items-start justify-between gap-4 flex-wrap">

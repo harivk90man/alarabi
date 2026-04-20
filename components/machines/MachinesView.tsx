@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, Cpu } from 'lucide-react'
 import type { Machine, Category } from '@/types/database'
 import { MachineDetailPanel } from './MachineDetailPanel'
 import { LogIssueModal } from '../issues/LogIssueModal'
 import { useAuth } from '@/lib/auth-context'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 type MachineWithCategory = Machine & { categories: { name: string } | null }
 
@@ -84,17 +85,13 @@ export function MachinesView() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Machines</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{machines.length} machines · {filtered.length} shown</p>
-        </div>
-        <Button onClick={() => handleLogIssue('')} className="gap-2">
+    <div className="space-y-5">
+      <PageHeader icon={Cpu} title="Machines" subtitle={`${machines.length} machines · ${filtered.length} shown`}>
+        <Button onClick={() => handleLogIssue('')} className="gap-2 bg-white/15 hover:bg-white/25 text-white border-0">
           <Plus className="w-4 h-4" />
           Log Issue
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -122,7 +119,7 @@ export function MachinesView() {
 
       <div className="flex gap-4">
         {/* Table */}
-        <div className="flex-1 rounded-lg border overflow-hidden" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+        <div className="flex-1 rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b" style={{ backgroundColor: 'var(--app-nav-hover)', borderColor: 'var(--app-card-border)' }}>

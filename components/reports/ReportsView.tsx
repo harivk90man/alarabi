@@ -10,7 +10,8 @@ import { formatDuration } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileText, Download, Loader2, CalendarRange } from 'lucide-react'
+import { FileText, Download, Loader2, CalendarRange, BarChart3 } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { exportCSV, exportPDF } from '@/lib/report-export'
 import { getSparePartsUsageReport } from '@/lib/queries'
 
@@ -230,49 +231,40 @@ export function ReportsView() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>Reports</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>
-            Analytics and performance insights
-            {!loading && data && (
-              <span className="ml-2 text-[#1d4ed8] font-medium">
-                · {data.summary.total} issues in period
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Export buttons */}
+      <PageHeader
+        icon={BarChart3}
+        title="Reports"
+        subtitle={!loading && data ? `Analytics · ${data.summary.total} issues in period` : 'Analytics and performance insights'}
+      >
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleExportCSV}
             disabled={loading || !data || data.summary.total === 0}
-            className="gap-2 border-gray-300"
+            className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20"
           >
             <Download className="w-3.5 h-3.5" />
-            Export CSV
+            CSV
           </Button>
           <Button
             size="sm"
             onClick={handleExportPDF}
             disabled={loading || !data || data.summary.total === 0 || exporting === 'pdf'}
-            className="gap-2"
+            className="gap-2 bg-white/15 hover:bg-white/25 text-white border-0"
           >
             {exporting === 'pdf' ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <FileText className="w-3.5 h-3.5" />
             )}
-            {exporting === 'pdf' ? 'Generating…' : 'Export PDF'}
+            {exporting === 'pdf' ? 'Generating…' : 'PDF'}
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       {/* Period selector + custom date range */}
-      <div className="rounded-lg border p-4 space-y-3" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
         <div className="flex flex-wrap gap-2">
           {PERIODS.map(({ key, label }) => (
             <button
@@ -351,7 +343,7 @@ export function ReportsView() {
             { label: 'Preventive', value: data?.summary.preventive ?? 0, color: '#1d4ed8' },
             { label: 'Total Downtime', value: formatDuration(data?.totalDowntimeMin ?? 0), color: '#dc2626', isText: true },
           ].map(({ label, value, color, isText }) => (
-            <div key={label} className="rounded-lg border p-4" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+            <div key={label} className="rounded-xl p-4" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
               <p className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>{label}</p>
               <p className={`font-bold mt-1 ${isText ? 'text-xl' : 'text-3xl'}`} style={{ color }}>{value}</p>
             </div>
@@ -361,7 +353,7 @@ export function ReportsView() {
 
       {/* Distribution bar */}
       {!loading && data && data.summary.total > 0 && (
-        <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+        <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
           <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--app-text)' }}>Issue Type Distribution</h2>
           <div className="flex h-7 rounded-lg overflow-hidden gap-0.5">
             {breakdown_pct > 0 && (
@@ -394,7 +386,7 @@ export function ReportsView() {
       {!loading && data && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Downtime chart */}
-          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Top Downtime Machines</h2>
             {data.downtimeMachines.length === 0 ? (
               <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No breakdown data for this period</p>
@@ -416,7 +408,7 @@ export function ReportsView() {
           </div>
 
           {/* Operator performance */}
-          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Operator Performance</h2>
             {data.operatorStats.length === 0 ? (
               <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No resolved issues for this period</p>
@@ -454,7 +446,7 @@ export function ReportsView() {
       {!loading && partsUsage && (partsUsage.byCategory.length > 0 || partsUsage.topConsumed.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* By category */}
-          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Parts Usage by Category (KWD)</h2>
             <table className="w-full text-sm">
               <thead>
@@ -489,7 +481,7 @@ export function ReportsView() {
           </div>
 
           {/* Top consumed */}
-          <div className="rounded-lg border p-5" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+          <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
             <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Top 10 Most-Consumed Parts</h2>
             {partsUsage.topConsumed.length === 0 ? (
               <p className="text-sm text-center py-8" style={{ color: 'var(--app-text-muted)' }}>No parts consumed in this period</p>
@@ -521,7 +513,7 @@ export function ReportsView() {
 
       {/* Issues detail table */}
       {!loading && data && data.issues.length > 0 && (
-        <div className="rounded-lg border p-5 overflow-x-auto" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+        <div className="rounded-xl p-5 overflow-x-auto" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
           <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--app-text)' }}>Issues Detail</h2>
           <table className="w-full text-xs min-w-[900px]">
             <thead>
@@ -568,7 +560,7 @@ export function ReportsView() {
 
       {/* No data state */}
       {!loading && data && data.summary.total === 0 && (
-        <div className="rounded-lg border py-16 text-center" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)', color: 'var(--app-text-muted)' }}>
+        <div className="rounded-xl py-16 text-center" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)', color: 'var(--app-text-muted)' }}>
           <FileText className="w-10 h-10 mx-auto mb-3" />
           <p className="font-medium">No issues in this period</p>
           <p className="text-sm mt-1">Try a wider date range</p>

@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Pencil, Check, X, Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Check, X, Search, ChevronLeft, ChevronRight, AlertTriangle, Package } from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { logAudit } from '@/lib/audit'
 import { useAuth } from '@/lib/auth-context'
 import { useLanguage } from '@/lib/language-context'
@@ -117,19 +118,13 @@ export function SparesView() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--app-text)' }}>{t('sparesTitle')}</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>
-            {totalCount} {t('parts')}
-          </p>
-        </div>
-        <Button onClick={() => setShowAdd(!showAdd)} className="gap-2">
+    <div className="space-y-5">
+      <PageHeader icon={Package} title={t('sparesTitle')} subtitle={`${totalCount} ${t('parts')}`}>
+        <Button onClick={() => setShowAdd(!showAdd)} className="gap-2 bg-white/15 hover:bg-white/25 text-white border-0">
           <Plus className="w-4 h-4" />
           Add Part
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -155,7 +150,7 @@ export function SparesView() {
 
       {/* Add part form */}
       {showAdd && (
-        <div className="rounded-lg border p-4 space-y-3" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06)' }}>
           <h3 className="font-medium" style={{ color: 'var(--app-text)' }}>New Spare Part</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <div>
@@ -207,7 +202,7 @@ export function SparesView() {
       )}
 
       {/* Table */}
-      <div className="rounded-lg border overflow-hidden" style={{ backgroundColor: 'var(--app-card)', borderColor: 'var(--app-card-border)' }}>
+      <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--app-card)', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b" style={{ borderColor: 'var(--app-card-border)' }}>
